@@ -1,4 +1,6 @@
 FROM python:3.8-slim-bullseye
+ENV TZ=Asia/Ho_Chi_Minh
+RUN yes | cp -f /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ARG MONGO_MODE
 # Install necessary dependencies
@@ -10,8 +12,8 @@ RUN apt-get update \
 # Set the working directory
 WORKDIR /app
 
-# Install PRAW and pymongo
-RUN pip install praw pymongo
+# Install pip package
+RUN pip install --no-cache-dir praw pymongo spacy nltk
 
 # Copy the necessary files to the container
 COPY src /app/src

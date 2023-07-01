@@ -1,7 +1,17 @@
 #!/bin/bash
 
-set -e
+# Get the path to the MongoDB credential file from the command-line argument
+credential_file="$1"
 
-. scripts/mongo/settings.sh
+# Parse the credential file using jq
+host=$(jq -r '.host' "$credential_file")
+port=$(jq -r '.port' "$credential_file")
+username=$(jq -r '.username' "$credential_file")
+password=$(jq -r '.password' "$credential_file")
+database=$(jq -r '.database' "$credential_file")
 
-mongosh -u root -p "$MONGO_ROOT_PW" --authenticationDatabase admin
+# Construct the connection string
+connection_string="mongodb://$username:$password@$host:$port/$database?authSource=admin"
+
+# Connect to MongoDB using mongosh
+mongosh "$connection_string"
