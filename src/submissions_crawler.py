@@ -104,7 +104,7 @@ def fetch_new_submissions(subreddit_name, analyzer, limit):
     new_post_count = 0
     updated_sentiment_count = 0
 
-    logging.info(f"fetched {len(submissions)} posts from praw")
+    logging.info(f"fetched posts from praw")
     for submission in submissions:
         submission_data = {
             'id': submission.id,
