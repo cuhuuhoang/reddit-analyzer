@@ -2,16 +2,43 @@
 <html>
 <head>
     <title>Chart</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 </head>
 <body>
-    <canvas id="myChart"></canvas>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                SentimentTracker
+            </div>
+            <div class="card-body">
+                <a class="btn btn-primary" href="/chart/hour">Hourly Chart</a>
+                <a class="btn btn-primary" href="/chart/day">Daily Chart</a>
+                <hr />
+                <div class="card">
+                    <div class="card-body">
+                        <canvas id="myChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <p>Reference links:</p>
+                <ul class="list-unstyled">
+                    <li><a href="https://coinmarketcap.com/currencies/bitcoin/" target="_blank">Bitcoin on CoinMarketCap</a></li>
+                    <li><a href="https://vn.investing.com/indices/us-30" target="_blank">US 30 on Investing.com</a></li>
+                </ul>
+                <p>Owner contact information: hoangchfx20825@funix.edu.vn</p>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Retrieve the chart data passed from the server
-        var chartData = {{ chart_data|tojson }};
+        var chartData = {{ chart_data | tojson }};
+        var timeFormats = {{ time_formats | tojson }};
+        var defaultSubreddits = {{ default_subreddit | tojson }};
 
         // Prepare the datasets for the chart
         var datasets = [];
@@ -21,17 +48,20 @@
             var color = getRandomColor(); // Generate a random color
             colors[subreddit] = color;
 
+            var isVisible = defaultSubreddits.includes(subreddit); // Check if the subreddit is in the default list
+
             datasets.push({
                 label: subreddit,
                 data: chartData[subreddit].map(function(dataPoint) {
                     return {
-                        x: moment(dataPoint.timestamp, 'YYYY-MM-DD').toDate(),
+                        x: moment.unix(dataPoint.timestamp).toDate(),
                         y: dataPoint.sum_sentiment_score
                     };
                 }),
                 fill: false,
                 backgroundColor: color,
-                borderColor: color
+                borderColor: color,
+                hidden: !isVisible // Hide the dataset if it's not in the default list
             });
         }
 
@@ -47,12 +77,7 @@
                 scales: {
                     x: {
                         type: 'time',
-                        time: {
-                            unit: 'day',
-                            displayFormats: {
-                                day: 'YYYY-MM-DD'
-                            }
-                        },
+                        time: timeFormats,
                         ticks: {
                             autoSkip: true,
                             maxTicksLimit: 20
