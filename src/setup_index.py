@@ -1,11 +1,14 @@
 import sys
 
-from mongodb_utils import get_mongo_database
+import pymongo
+
+from mongodb_client import MongoDBClient
 
 
 def setup_index(path):
     # Access the database
-    database = get_mongo_database(path)
+    client = MongoDBClient(path)
+    database = client.database
 
     # collection submissions
     collection_submissions = database['submissions']
@@ -24,6 +27,28 @@ def setup_index(path):
     index_info = submission_sentiments_collection.index_information()
     if 'id_1' not in index_info:
         submission_sentiments_collection.create_index('id', unique=True)
+
+    # collection analyzed_by_created_hours
+    analyzed_by_created_hours_collection = database['analyzed_by_created_hours']
+    index_exists = False
+    for index_name, index_key in index_info.items():
+        if (
+                "created_hour" in index_key["key"]
+                and "subreddit" in index_key["key"]
+                and index_key["unique"] is False
+        ):
+            index_exists = True
+            break
+
+    # Create the index only if it doesn't exist
+    if not index_exists:
+        analyzed_by_created_hours_collection.create_index([
+            ("created_hour", pymongo.ASCENDING),
+            ("subreddit", pymongo.ASCENDING)
+        ])
+
+    # close
+    client.close_connection()
 
 
 if __name__ == '__main__':

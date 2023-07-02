@@ -2,12 +2,21 @@ import hashlib
 import time
 
 from logging_config import *
-from mongodb_utils import get_mongo_database
 from reddit_crawler_utils import create_reddit_instance
 from sentiment_analyzer import PARSER_KEY, SentimentAnalyzer
+from mongodb_client import MongoDBClient
 
 
 def update_submission(submission_collection, submission_data):
+    # remove selftext for saving disk
+    selftext = submission_data.get('selftext')
+    submission_data['selftext_length'] = 0 if selftext is None else len(selftext)
+    submission_data.pop('selftext')
+    # remove title also
+    title = submission_data.get('title')
+    submission_data['title_length'] = 0 if title is None else len(title)
+    submission_data.pop('title')
+
     existing_submission = submission_collection.find_one({'id': submission_data['id']})
 
     if existing_submission:
@@ -31,32 +40,24 @@ def update_submission_scores(collection, submission_score_data):
     existing_submission = collection.find_one({'id': submission_id})
 
     if existing_submission:
-        # Get the last entry from the values array
-        last_entry = existing_submission['values'][-1]
-
         # Check if any of the values have changed
-        if (last_entry['upvote_ratio'] != submission_score_data['upvote_ratio'] or
-                last_entry['ups'] != submission_score_data['ups'] or
-                last_entry['score'] != submission_score_data['score'] or
-                last_entry['num_comments'] != submission_score_data['num_comments']):
-            # Append the new values to the values array
-            existing_submission['values'].append(submission_score_data)
-
+        if (existing_submission['upvote_ratio'] != submission_score_data['upvote_ratio'] or
+                existing_submission['ups'] != submission_score_data['ups'] or
+                existing_submission['score'] != submission_score_data['score'] or
+                existing_submission['num_comments'] != submission_score_data['num_comments']):
             # Update the submission in the collection
             collection.update_one(
                 {'id': submission_id},
-                {'$set': {'values': existing_submission['values']}}
+                {'$set': submission_score_data}
             )
+            return True
 
     else:
-        # Create a new submission entry in the submission_scores collection
-        new_submission = {
-            'id': submission_id,
-            'values': [submission_score_data]
-        }
-
         # Insert the new submission into the collection
-        collection.insert_one(new_submission)
+        collection.insert_one(submission_score_data)
+        return True
+
+    return False
 
 
 def update_sentiment_values(collection, analyzer, submission_data):
@@ -74,7 +75,7 @@ def update_sentiment_values(collection, analyzer, submission_data):
         return False
 
     sentiment_value = analyzer.get_sentiment(title + "\n" + selftext)
-    updated_timestamp = time.time()
+    updated_timestamp = int(time.time())
 
     updated_object = {
         'id': submission_data['id'],
@@ -92,7 +93,8 @@ def update_sentiment_values(collection, analyzer, submission_data):
 
 def fetch_new_submissions(subreddit_name, analyzer, limit):
     # Access the database
-    database = get_mongo_database()
+    client = MongoDBClient()
+    database = client.database
     submissions_collection = database['submissions']
     submission_scores_collection = database['submission_scores']
     submission_sentiments_collection = database['submission_sentiments']
@@ -102,6 +104,7 @@ def fetch_new_submissions(subreddit_name, analyzer, limit):
     submissions = subreddit.new(limit=limit)
 
     new_post_count = 0
+    updated_post_score_count = 0
     updated_sentiment_count = 0
 
     logging.info(f"fetched posts from praw")
@@ -114,9 +117,15 @@ def fetch_new_submissions(subreddit_name, analyzer, limit):
             'created': submission.created,
             'author_fullname': getattr(submission, 'author_fullname', None),
             'selftext': getattr(submission, 'selftext', None),
-            'post_hint': getattr(submission, 'post_hint', None)
+            'post_hint': getattr(submission, 'post_hint', None),
+            'url': getattr(submission, 'url', None)
         }
 
+        # Update sentiment_values (should be done first or selftext will be removed)
+        if update_sentiment_values(submission_sentiments_collection, analyzer, submission_data):
+            updated_sentiment_count += 1
+
+        # update post value
         if update_submission(submissions_collection, submission_data):
             new_post_count += 1
 
@@ -131,13 +140,12 @@ def fetch_new_submissions(subreddit_name, analyzer, limit):
         }
 
         # Update the submission_scores collection
-        update_submission_scores(submission_scores_collection, submission_score_data)
+        if update_submission_scores(submission_scores_collection, submission_score_data):
+            updated_post_score_count += 1
 
-        # Update sentiment_values
-        if update_sentiment_values(submission_sentiments_collection, analyzer, submission_data):
-            updated_sentiment_count += 1
-
-    logging.info(f"New posts added: {new_post_count}; Sentiment Value updated: {updated_sentiment_count}")
+    logging.info(f"New posts added: {new_post_count}; Updated post score: {updated_post_score_count}; Sentiment Value "
+                 f"updated: {updated_sentiment_count}")
+    client.close_connection()
 
 
 if __name__ == '__main__':

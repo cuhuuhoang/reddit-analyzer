@@ -2,6 +2,7 @@ from logging_config import *
 import time
 
 from sentiment_analyzer import SentimentAnalyzer
+from spark_analyzer import SparkAnalyzer
 from submissions_crawler import fetch_new_submissions
 
 
@@ -14,7 +15,9 @@ def run_sample_crawl(subreddit_name, analyzer, limit):
 
 
 if __name__ == '__main__':
-    _analyzer = SentimentAnalyzer()
+    sentiment_analyzer = SentimentAnalyzer()
+    spark_analyzer = SparkAnalyzer()
+
     while True:
         subreddit_list = [
             'wallstreetbets',
@@ -25,7 +28,8 @@ if __name__ == '__main__':
         ]
         for subreddit in subreddit_list:
             logging.info(f"Fetching new submissions for subreddit: '{subreddit}'")
-            fetch_new_submissions(subreddit, _analyzer, 1000)
+            fetch_new_submissions(subreddit, sentiment_analyzer, 1000)
             time.sleep(10)
-        logging.info("Waiting for 1 minute before running again...")
-        time.sleep(60)
+
+        logging.info(f"spark_analyzer.analyze_by_hours()")
+        spark_analyzer.analyze_by_hours()
