@@ -16,7 +16,20 @@ default_subreddit = ['bitcoin', 'wallstreetbets']
 
 
 def get_chart_data(collection_name, time_range, time_formats, chart_type):
-    # Retrieve and process the filtered data from the collection
+    """
+    This function retrieves and processes filtered data from a specified MongoDB collection.
+    It filters the data based on the given time range and organizes it to be used for generating charts.
+    It returns the rendered template for displaying the chart.
+
+    Args:
+        collection_name (str): The name of the collection in the database.
+        time_range (tuple): A tuple containing the start and end timestamps for filtering the data.
+        time_formats (dict): A dictionary containing the time unit and display formats for the chart.
+        chart_type (str): The type of chart (e.g., 'day' or 'hour').
+
+    Returns:
+        A rendered template with the chart data.
+    """
     collection = database[collection_name]
     data = collection.find({
         'timestamp': {
@@ -46,12 +59,22 @@ def get_chart_data(collection_name, time_range, time_formats, chart_type):
 
 @app.route('/')
 def root():
+    """
+    Redirects the root URL to the '/chart/day' route.
+    """
     return redirect('/chart/day')
 
 
 @app.route('/chart/day')
 def chart_day():
-    # Calculate the date range for filtering
+    """
+    This function is the route handler for "/chart/day". It calculates the date range for filtering data from the
+    last 30 days and calls the get_chart_data() function to retrieve and process the data for generating a daily chart.
+    It returns the rendered template for displaying the chart.
+
+    Returns:
+        The rendered chart template for the 'day' chart.
+    """
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     last_month = today - timedelta(days=30)
 
@@ -67,7 +90,14 @@ def chart_day():
 
 @app.route('/chart/hour')
 def chart_hour():
-    # Calculate the date range for filtering
+    """
+    This function is the route handler for "/chart/hour". It calculates the date range for filtering data
+    from the last 24 hours and calls the get_chart_data() function to retrieve and process the data for
+    generating an hourly chart. It returns the rendered template for displaying the chart.
+
+    Returns:
+        The rendered chart template for the 'hour' chart.
+    """
     now = datetime.now()
     last_24_hours = now - timedelta(hours=24)
     current_hour = now.replace(minute=0, second=0, microsecond=0)
@@ -83,34 +113,49 @@ def chart_hour():
 
 
 def timestamp_to_datetime(timestamp):
+    """
+    Converts a timestamp to a datetime object.
+
+    Args:
+        timestamp (int): The timestamp to convert.
+
+    Returns:
+        A datetime object corresponding to the timestamp.
+    """
     return datetime.fromtimestamp(timestamp)
 
 
 @app.route('/details')
 def details():
+    """
+    This function is the route handler for "/details". It retrieves detailed information about submissions within
+    a specific time range and subreddit. It retrieves data from the "submissions", "submission_scores", and
+    "submission_sentiments" collections in the MongoDB database and processes the data to compute composite sentiment,
+    absolute sentiment, and effect. The result is passed to the "details.html" template for rendering.
+
+    Returns:
+        The rendered template with the submission details.
+    """
     chart_type = request.args.get('type')
     subreddit = request.args.get('subreddit')
     timestamp = int(request.args.get('timestamp'))
 
     if chart_type == 'hour':
         start_timestamp = timestamp
-        end_timestamp = timestamp + 3600  # Add 1 hour (3600 seconds) to the start timestamp
+        end_timestamp = timestamp + 3600
         chart_label = f"{chart_type.capitalize()} {timestamp_to_datetime(timestamp).strftime('%Y-%m-%d %Hh')}"
     elif chart_type == 'day':
         start_timestamp = timestamp
-        end_timestamp = timestamp + 86400  # Add 1 day (86400 seconds) to the start timestamp
+        end_timestamp = timestamp + 86400
         chart_label = f"{chart_type.capitalize()} {timestamp_to_datetime(timestamp).strftime('%Y-%m-%d')}"
     else:
-        # Handle invalid chart type
         return 'Invalid chart type'
 
-    # Retrieve submissions within the specified time range and subreddit
     submissions = database['submissions'].find({
         'created': {'$gte': start_timestamp, '$lt': end_timestamp},
         'subreddit': subreddit
     })
 
-    # Prepare a list to store the result
     result = []
 
     for submission in submissions:
@@ -120,7 +165,6 @@ def details():
         url = submission['url']
         selftext_length = submission['selftext_length']
 
-        # Retrieve submission scores
         submission_scores = database['submission_scores'].find_one({'id': submission_id})
         if submission_scores:
             upvote_ratio = submission_scores['upvote_ratio']
@@ -133,14 +177,12 @@ def details():
             score = 'N/A'
             num_comments = 'N/A'
 
-        # Retrieve submission sentiments
         submission_sentiments = database['submission_sentiments'].find_one({'id': submission_id})
         if submission_sentiments:
             sentiment_value = round(submission_sentiments['sentiment_value'], 3)
         else:
             sentiment_value = 'N/A'
 
-        # Compute composite sentiment, absolute sentiment, and effect
         try:
             composite_sentiment = sentiment_value * log(score)
         except (ValueError, ZeroDivisionError, TypeError):
@@ -148,7 +190,6 @@ def details():
         abs_sentiment = round(abs(composite_sentiment), 2)
         effect = 'positive' if composite_sentiment >= 0 else 'negative'
 
-        # Generate slug
         url = 'https://www.reddit.com' + url
         parsed_url = urlparse(url)
         slug = parsed_url.path.strip('/').split('/')[-1]
