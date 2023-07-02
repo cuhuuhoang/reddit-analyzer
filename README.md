@@ -72,6 +72,6 @@ python src/setup_index.py resources/mongo-docker-credential.json
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the `MIT License`.
 
 If you have any further questions or need assistance, feel free to reach out to me at cuhuuhoang@gmail.com. I'll be happy to help!
