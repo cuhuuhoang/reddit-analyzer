@@ -27,6 +27,9 @@ if __name__ == '__main__':
         subreddit_list = [
             'wallstreetbets',
             'bitcoin',
+            'stocks',
+            'StockMarket',
+            'investing',
             'cryptocurrency',
             'ethereum',
             'altcoin'
