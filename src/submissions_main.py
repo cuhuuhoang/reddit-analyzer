@@ -16,7 +16,6 @@ def run_sample_crawl(subreddit_name, analyzer, limit):
 
 if __name__ == '__main__':
     sentiment_analyzer = SentimentAnalyzer()
-    spark_analyzer = SparkAnalyzer()
 
     while True:
         subreddit_list = [
@@ -32,4 +31,6 @@ if __name__ == '__main__':
             time.sleep(10)
 
         logging.info(f"spark_analyzer.analyze_by_hours()")
+        spark_analyzer = SparkAnalyzer()
         spark_analyzer.analyze_by_hours()
+        spark_analyzer.stop()

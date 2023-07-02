@@ -18,6 +18,7 @@ class SparkAnalyzer:
 
         [database, connection_string] = MongoDBClient.get_mongo_connection_string()
 
+        self.client = MongoDBClient()
         self.spark = SparkSession \
             .builder \
             .master('local') \
@@ -134,8 +135,7 @@ class SparkAnalyzer:
             .withColumnRenamed("sum(sentiment_composite)", "sum_sentiment_score")
 
         # Write the result back to the MongoDB collection analyzed_by_created_hours
-        client = MongoDBClient()
-        database = client.database
+        database = self.client.database
         analyzed_by_created_hours_collection = database['analyzed_by_created_hours']
         # Iterate over the result_df DataFrame and perform an upsert operation
         for row in result_df.collect():
@@ -149,10 +149,14 @@ class SparkAnalyzer:
                 {"$set": {"sum_sentiment_score": sum_sentiment_score}},
                 upsert=True
             )
+
+    def stop(self):
+        self.spark.stop()
         # close connection
-        client.close_connection()
+        self.client.close_connection()
 
 
 if __name__ == '__main__':
     analyzer = SparkAnalyzer()
     analyzer.analyze_by_hours()
+    analyzer.stop()
