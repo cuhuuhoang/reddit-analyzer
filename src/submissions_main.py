@@ -32,5 +32,6 @@ if __name__ == '__main__':
 
         logging.info(f"spark_analyzer.analyze_by_hours()")
         spark_analyzer = SparkAnalyzer()
-        spark_analyzer.analyze_by_hours()
+        # spark_analyzer.analyze_by_hours()
+        spark_analyzer.analyze_by_days()
         spark_analyzer.stop()
