@@ -25,7 +25,7 @@
                 label: subreddit,
                 data: chartData[subreddit].map(function(dataPoint) {
                     return {
-                        x: moment(dataPoint.timestamp, 'YYYY-MM-DD_HH').toDate(),
+                        x: moment(dataPoint.timestamp, 'YYYY-MM-DD').toDate(),
                         y: dataPoint.sum_sentiment_score
                     };
                 }),
