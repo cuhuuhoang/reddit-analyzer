@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chart</title>
+    <title>SentimentTracker</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
@@ -11,7 +11,7 @@
     <div class="container">
         <div class="card">
             <div class="card-header">
-                SentimentTracker
+                SentimentTracker {{ chart_type }}
             </div>
             <div class="card-body">
                 <a class="btn btn-primary" href="/chart/hour">Hourly Chart</a>
@@ -103,6 +103,30 @@
 
             return color;
         }
+
+        // Add click event listener to the chart canvas
+        document.getElementById('myChart').onclick = function (evt) {
+            var activePoints = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+
+            if (activePoints.length > 0) {
+                var firstPoint = activePoints[0];
+                var datasetIndex = firstPoint.datasetIndex;
+                var index = firstPoint.index;
+
+                // Retrieve the dataset and data point
+                var dataset = chart.data.datasets[datasetIndex];
+                var dataPoint = dataset.data[index];
+
+                // Retrieve the chart_type and timestamp
+                var chartType = '{{ chart_type }}';
+                var subreddit = dataset.label;
+                var timestamp = moment(dataPoint.x) / 1000;
+
+                // Make the request
+                var url = '/details?type=' + chartType + '&subreddit=' + subreddit + '&timestamp=' + timestamp;
+                window.location.href = url;
+            }
+        };
     </script>
 </body>
 </html>

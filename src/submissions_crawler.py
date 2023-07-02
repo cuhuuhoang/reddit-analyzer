@@ -9,12 +9,8 @@ from mongodb_client import MongoDBClient
 
 def update_submission(submission_collection, submission_data):
     # remove selftext for saving disk
-    selftext = submission_data.get('selftext')
-    submission_data['selftext_length'] = 0 if selftext is None else len(selftext)
     submission_data.pop('selftext')
     # remove title also
-    title = submission_data.get('title')
-    submission_data['title_length'] = 0 if title is None else len(title)
     submission_data.pop('title')
 
     existing_submission = submission_collection.find_one({'id': submission_data['id']})
@@ -61,7 +57,8 @@ def update_submission_scores(collection, submission_score_data):
 
 
 def update_sentiment_values(collection, analyzer, submission_data):
-    if 'selftext' not in submission_data:
+    if 'selftext' not in submission_data or submission_data['title_length'] < 10 \
+            or submission_data['selftext_length'] < 100:
         return False
 
     title = submission_data['title']
@@ -118,7 +115,9 @@ def fetch_new_submissions(subreddit_name, analyzer, limit):
             'author_fullname': getattr(submission, 'author_fullname', None),
             'selftext': getattr(submission, 'selftext', None),
             'post_hint': getattr(submission, 'post_hint', None),
-            'url': getattr(submission, 'url', None)
+            'url': getattr(submission, 'permalink', None),
+            'selftext_length': len(submission.selftext) if submission.selftext else 0,
+            'title_length': len(submission.title) if submission.title else 0
         }
 
         # Update sentiment_values (should be done first or selftext will be removed)

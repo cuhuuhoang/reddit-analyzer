@@ -37,8 +37,10 @@ class SentimentAnalyzer:
 
 if __name__ == '__main__':
     # Example usage
-    sample = "It had a great storyline and fantastic acting but I hate this"
+    # sample = "It had a great storyline and fantastic acting but I hate this"
     # text = "I hate this"
+    # sample = "All of this was borrowed money with a very high interest rate. "
+    sample = "Cointelegraph News https://cointelegraph.com/news/riot-platforms-add-bitcoin-miners-ahead-of-2024-halving"
 
     analyzer = SentimentAnalyzer()
     sentiment = analyzer.get_sentiment(sample)

@@ -97,7 +97,7 @@ class SparkAnalyzer:
         # Filter the DataFrame based on the created timestamp and selftext_length
         filtered_submissions_df = submissions_df \
             .filter(submissions_df.created > one_month_ago) \
-            .filter(submissions_df.selftext_length > 50)
+            .filter(submissions_df.selftext_length > 100)
 
         # Join with submission_scores to get the last value of score
         joined_score_df = filtered_submissions_df.join(

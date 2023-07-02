@@ -20,7 +20,7 @@ if __name__ == '__main__':
     while True:
         logging.info(f"spark_analyzer")
         spark_analyzer = SparkAnalyzer()
-        # spark_analyzer.analyze_by_hours()
+        spark_analyzer.analyze_by_hours()
         spark_analyzer.analyze_by_days()
         spark_analyzer.stop()
 

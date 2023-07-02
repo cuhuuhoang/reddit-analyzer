@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Details</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <style>
+        .positive {
+            color: green;
+        }
+
+        .negative {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                Details
+            </div>
+            <div class="card-body">
+                <a class="btn btn-primary" href="/chart/hour">Hourly Chart</a>
+                <a class="btn btn-primary" href="/chart/day">Daily Chart</a>
+                <hr />
+                <table id="detailsTable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Created</th>
+                            <th>URL</th>
+                            <th>Abs Sentiment</th>
+                            <th>Selftext Length</th>
+                            <th>Upvote Ratio</th>
+                            <th>Score</th>
+                            <th>Num Comments</th>
+                            <th>Sentiment Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in result %}
+                        <tr>
+                            <td style="white-space: nowrap;">{{ item.created }}</td>
+                            <td><a href="{{ item.url }}" target="_blank">{{ item.slug }}</a></td>
+                            <td class="{{ 'positive' if item.effect == 'positive' else 'negative' }}">{{ item.abs_sentiment }}</td>
+                            <td>{{ item.selftext_length }}</td>
+                            <td>{{ item.upvote_ratio }}</td>
+                            <td>{{ item.score }}</td>
+                            <td>{{ item.num_comments }}</td>
+                            <td>{{ item.sentiment_value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                <p>Owner contact information: hoangchfx20825@funix.edu.vn</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#detailsTable').DataTable({
+                "order": [[2, "desc"]]  // Sort by Abs Sentiment column in descending order
+            });
+        });
+    </script>
+</body>
+</html>
