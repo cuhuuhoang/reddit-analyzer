@@ -6,14 +6,6 @@ from spark_analyzer import SparkAnalyzer
 from submissions_crawler import fetch_new_submissions
 
 
-def run_sample_crawl(subreddit_name, analyzer, limit):
-    start_time = time.time()
-    fetch_new_submissions(subreddit_name, analyzer, limit)
-    end_time = time.time()
-    runtime = end_time - start_time
-    logging.info(f"fetch_new_submissions completed in {runtime:.3f} seconds")
-
-
 if __name__ == '__main__':
     sentiment_analyzer = SentimentAnalyzer()
 
