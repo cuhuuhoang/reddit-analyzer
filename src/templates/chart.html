@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chart</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+</head>
+<body>
+    <canvas id="myChart"></canvas>
+
+    <script>
+        // Retrieve the chart data passed from the server
+        var chartData = {{ chart_data|tojson }};
+
+        // Prepare the datasets for the chart
+        var datasets = [];
+        var colors = {}; // Mapping of subreddit to color
+
+        for (var subreddit in chartData) {
+            var color = getRandomColor(); // Generate a random color
+            colors[subreddit] = color;
+
+            datasets.push({
+                label: subreddit,
+                data: chartData[subreddit].map(function(dataPoint) {
+                    return {
+                        x: moment(dataPoint.timestamp, 'YYYY-MM-DD_HH').toDate(),
+                        y: dataPoint.sum_sentiment_score
+                    };
+                }),
+                fill: false,
+                backgroundColor: color,
+                borderColor: color
+            });
+        }
+
+        // Create the chart using Chart.js
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'hour',
+                            displayFormats: {
+                                hour: 'YYYY-MM-DD_HH'
+                            }
+                        },
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 20
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Sum Sentiment Score'
+                        }
+                    }
+                }
+            }
+        });
+
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+
+            return color;
+        }
+    </script>
+</body>
+</html>

@@ -33,7 +33,7 @@ def setup_index(path):
     index_exists = False
     for index_name, index_key in index_info.items():
         if (
-                "created_hour" in index_key["key"]
+                "timestamp" in index_key["key"]
                 and "subreddit" in index_key["key"]
                 and index_key["unique"] is False
         ):
@@ -43,7 +43,28 @@ def setup_index(path):
     # Create the index only if it doesn't exist
     if not index_exists:
         analyzed_by_created_hours_collection.create_index([
-            ("created_hour", pymongo.ASCENDING),
+            ("timestamp", pymongo.ASCENDING),
+            ("subreddit", pymongo.ASCENDING)
+        ])
+
+    # collection analyzed_by_created_days
+    analyzed_by_created_days_collection = database['analyzed_by_created_days']
+    index_exists = False
+
+    # Check if the index already exists
+    for index_name, index_key in analyzed_by_created_days_collection.index_information().items():
+        if (
+                "timestamp" in index_key["key"]
+                and "subreddit" in index_key["key"]
+                and index_key["unique"] is False
+        ):
+            index_exists = True
+            break
+
+    # Create the index if it doesn't exist
+    if not index_exists:
+        analyzed_by_created_days_collection.create_index([
+            ("timestamp", pymongo.ASCENDING),
             ("subreddit", pymongo.ASCENDING)
         ])
 

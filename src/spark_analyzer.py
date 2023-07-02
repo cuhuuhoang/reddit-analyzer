@@ -3,7 +3,7 @@ import time
 
 import findspark
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, floor
+from pyspark.sql.functions import col, floor, log, when
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, BooleanType, DoubleType
 
 from mongodb_client import MongoDBClient
@@ -86,7 +86,7 @@ class SparkAnalyzer:
             .load()
         return submission_sentiments_df
 
-    def analyze_by_hours(self):
+    def get_composite_sentiment_df(self):
         submissions_df = self.get_submissions_df()
         submission_scores_df = self.get_submission_scores_df()
         submission_sentiments_df = self.get_submission_sentiments_df()
@@ -95,12 +95,12 @@ class SparkAnalyzer:
         one_month_ago = int(time.time()) - 30 * 24 * 3600
 
         # Filter the DataFrame based on the created timestamp and selftext_length
-        filtered_submissions_df = submissions_df\
-            .filter(submissions_df.created > one_month_ago)\
+        filtered_submissions_df = submissions_df \
+            .filter(submissions_df.created > one_month_ago) \
             .filter(submissions_df.selftext_length > 50)
 
         # Join with submission_scores to get the last value of score
-        joined_df = filtered_submissions_df.join(
+        joined_score_df = filtered_submissions_df.join(
             submission_scores_df,
             "id",
             "inner"
@@ -112,31 +112,37 @@ class SparkAnalyzer:
         )
 
         # Join with submission_sentiments to get sentiment_value
-        final_df = joined_df.join(
+        joined_sentiments_df = joined_score_df.join(
             submission_sentiments_df,
             "id",
             "inner"
         ).select(
-            joined_df.id,
-            joined_df.subreddit,
-            joined_df.created,
-            joined_df.score,
+            joined_score_df.id,
+            joined_score_df.subreddit,
+            joined_score_df.created,
+            joined_score_df.score,
             submission_sentiments_df.sentiment_value
         )
 
         # Calculate sentiment_composite
-        final_df = final_df.withColumn("sentiment_composite", col("sentiment_value") * col("score"))
+        composite_sentiment_df = joined_sentiments_df\
+            .withColumn("sentiment_composite",
+                        col("sentiment_value") * when(col("score") > 0, log(col("score"))).otherwise(0))
+        return composite_sentiment_df
+
+    def analyze_by_hours(self):
+        composite_sentiment_df = self.get_composite_sentiment_df()
 
         # Round down the created timestamp to the nearest hour
-        final_df = final_df.withColumn("created_hour", floor(final_df.created / 3600) * 3600)
+        floor_created_df = composite_sentiment_df.withColumn("created_hour", floor(col('created') / 3600) * 3600)
 
         # Group by created_hour, subreddit, and find the sum of sentiment_composite
-        result_df = final_df.groupby("created_hour", "subreddit").agg({"sentiment_composite": "sum"})\
+        result_df = floor_created_df.groupby("created_hour", "subreddit").agg({"sentiment_composite": "sum"})\
             .withColumnRenamed("sum(sentiment_composite)", "sum_sentiment_score")
 
         # Write the result back to the MongoDB collection analyzed_by_created_hours
         database = self.client.database
-        analyzed_by_created_hours_collection = database['analyzed_by_created_hours']
+        output_collection = database['analyzed_by_created_hours']
         # Iterate over the result_df DataFrame and perform an upsert operation
         for row in result_df.collect():
             created_hour = row["created_hour"]
@@ -144,8 +150,34 @@ class SparkAnalyzer:
             sum_sentiment_score = row["sum_sentiment_score"]
 
             # Perform an upsert operation
-            analyzed_by_created_hours_collection.update_many(
-                {"created_hour": created_hour, "subreddit": subreddit},
+            output_collection.update_many(
+                {"timestamp": created_hour, "subreddit": subreddit},
+                {"$set": {"sum_sentiment_score": sum_sentiment_score}},
+                upsert=True
+            )
+
+    def analyze_by_days(self):
+        composite_sentiment_df = self.get_composite_sentiment_df()
+
+        # Round down the created timestamp to the nearest day
+        floor_created_df = composite_sentiment_df.withColumn("created_day", floor(col('created') / 86400) * 86400)
+
+        # Group by created_day, subreddit, and find the sum of sentiment_composite
+        result_df = floor_created_df.groupby("created_day", "subreddit").agg({"sentiment_composite": "sum"})\
+            .withColumnRenamed("sum(sentiment_composite)", "sum_sentiment_score")
+
+        # Write the result back to the MongoDB collection analyzed_by_created_days
+        database = self.client.database
+        output_collection = database['analyzed_by_created_days']
+        # Iterate over the result_df DataFrame and perform an upsert operation
+        for row in result_df.collect():
+            created_day = row["created_day"]
+            subreddit = row["subreddit"]
+            sum_sentiment_score = row["sum_sentiment_score"]
+
+            # Perform an upsert operation
+            output_collection.update_many(
+                {"timestamp": created_day, "subreddit": subreddit},
                 {"$set": {"sum_sentiment_score": sum_sentiment_score}},
                 upsert=True
             )
@@ -159,4 +191,5 @@ class SparkAnalyzer:
 if __name__ == '__main__':
     analyzer = SparkAnalyzer()
     analyzer.analyze_by_hours()
+    analyzer.analyze_by_days()
     analyzer.stop()
