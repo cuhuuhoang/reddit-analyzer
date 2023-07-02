@@ -18,6 +18,12 @@ if __name__ == '__main__':
     sentiment_analyzer = SentimentAnalyzer()
 
     while True:
+        logging.info(f"spark_analyzer")
+        spark_analyzer = SparkAnalyzer()
+        # spark_analyzer.analyze_by_hours()
+        spark_analyzer.analyze_by_days()
+        spark_analyzer.stop()
+
         subreddit_list = [
             'wallstreetbets',
             'bitcoin',
@@ -29,9 +35,3 @@ if __name__ == '__main__':
             logging.info(f"Fetching new submissions for subreddit: '{subreddit}'")
             fetch_new_submissions(subreddit, sentiment_analyzer, 1000)
             time.sleep(10)
-
-        logging.info(f"spark_analyzer.analyze_by_hours()")
-        spark_analyzer = SparkAnalyzer()
-        # spark_analyzer.analyze_by_hours()
-        spark_analyzer.analyze_by_days()
-        spark_analyzer.stop()
