@@ -1,0 +1,6 @@
+praw
+pymongo
+spacy
+nltk
+pyspark
+findspark
