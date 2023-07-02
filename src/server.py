@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect
 
 from mongodb_client import MongoDBClient
 
@@ -10,6 +10,11 @@ app = Flask(__name__)
 client = MongoDBClient()
 database = client.database
 collection = database['analyzed_by_created_days']
+
+
+@app.route('/')
+def root():
+    return redirect('/chart')
 
 
 @app.route('/chart')
