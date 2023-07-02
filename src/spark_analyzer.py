@@ -11,6 +11,15 @@ from mongodb_client import MongoDBClient
 
 class SparkAnalyzer:
     def __init__(self):
+        """
+        Initializes the SparkAnalyzer class.
+
+        It sets the necessary environment variables for Spark and MongoDB configurations,
+        initializes a MongoDB client, and creates a SparkSession.
+
+        Returns:
+            None
+        """
         os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
         os.environ["SPARK_HOME"] = "/content/spark-3.3.2-bin-hadoop3"
 
@@ -29,6 +38,12 @@ class SparkAnalyzer:
             .getOrCreate()
 
     def get_submissions_df(self):
+        """
+        Retrieves the submissions DataFrame from the 'submissions' collection.
+
+        Returns:
+            The submissions DataFrame.
+        """
         # Define the schema for the 'submissions' collection
         submissions_schema = StructType([
             StructField("_id", StringType()),
@@ -51,6 +66,12 @@ class SparkAnalyzer:
         return submissions_df
 
     def get_submission_scores_df(self):
+        """
+        Retrieves the submission_scores DataFrame from the 'submission_scores' collection.
+
+        Returns:
+            The submission_scores DataFrame.
+        """
         # Define the schema for the 'submission_scores' collection
         submission_scores_schema = StructType([
             StructField("_id", StringType()),
@@ -70,6 +91,12 @@ class SparkAnalyzer:
         return submission_scores_df
 
     def get_submission_sentiments_df(self):
+        """
+        Retrieves the submission_sentiments DataFrame from the 'submission_sentiments' collection.
+
+        Returns:
+            The submission_sentiments DataFrame.
+        """
         # Define the schema for the 'submission_sentiments' collection
         submission_sentiments_schema = StructType([
             StructField("_id", StringType()),
@@ -87,6 +114,14 @@ class SparkAnalyzer:
         return submission_sentiments_df
 
     def get_composite_sentiment_df(self):
+        """
+        This function combines the data from submissions, submission scores, and submission sentiments DataFrames
+        to calculate the composite sentiment for each submission. It returns a DataFrame containing the composite
+        sentiment scores.
+
+        Returns:
+            The composite sentiment DataFrame.
+        """
         submissions_df = self.get_submissions_df()
         submission_scores_df = self.get_submission_scores_df()
         submission_sentiments_df = self.get_submission_sentiments_df()
@@ -125,19 +160,27 @@ class SparkAnalyzer:
         )
 
         # Calculate sentiment_composite
-        composite_sentiment_df = joined_sentiments_df\
+        composite_sentiment_df = joined_sentiments_df \
             .withColumn("sentiment_composite",
                         col("sentiment_value") * when(col("score") > 0, log(col("score"))).otherwise(0))
         return composite_sentiment_df
 
     def analyze_by_hours(self):
+        """
+        This function performs sentiment analysis on submissions grouped by hours. It calculates the sum of
+        sentiment scores for each subreddit within each hour and writes the results to the MongoDB collection
+        named "analyzed_by_created_hours".
+
+        Returns:
+            None
+        """
         composite_sentiment_df = self.get_composite_sentiment_df()
 
         # Round down the created timestamp to the nearest hour
         floor_created_df = composite_sentiment_df.withColumn("created_hour", floor(col('created') / 3600) * 3600)
 
         # Group by created_hour, subreddit, and find the sum of sentiment_composite
-        result_df = floor_created_df.groupby("created_hour", "subreddit").agg({"sentiment_composite": "sum"})\
+        result_df = floor_created_df.groupby("created_hour", "subreddit").agg({"sentiment_composite": "sum"}) \
             .withColumnRenamed("sum(sentiment_composite)", "sum_sentiment_score")
 
         # Write the result back to the MongoDB collection analyzed_by_created_hours
@@ -157,13 +200,21 @@ class SparkAnalyzer:
             )
 
     def analyze_by_days(self):
+        """
+        This function performs sentiment analysis on submissions grouped by days. It calculates the sum of
+        sentiment scores for each subreddit within each day and writes the results to the MongoDB collection named
+        "analyzed_by_created_days".
+
+        Returns:
+            None
+        """
         composite_sentiment_df = self.get_composite_sentiment_df()
 
         # Round down the created timestamp to the nearest day
         floor_created_df = composite_sentiment_df.withColumn("created_day", floor(col('created') / 86400) * 86400)
 
         # Group by created_day, subreddit, and find the sum of sentiment_composite
-        result_df = floor_created_df.groupby("created_day", "subreddit").agg({"sentiment_composite": "sum"})\
+        result_df = floor_created_df.groupby("created_day", "subreddit").agg({"sentiment_composite": "sum"}) \
             .withColumnRenamed("sum(sentiment_composite)", "sum_sentiment_score")
 
         # Write the result back to the MongoDB collection analyzed_by_created_days
@@ -183,6 +234,12 @@ class SparkAnalyzer:
             )
 
     def stop(self):
+        """
+        Stops the Spark session and closes the MongoDB connection.
+
+        Returns:
+            None
+        """
         self.spark.stop()
         # close connection
         self.client.close_connection()
