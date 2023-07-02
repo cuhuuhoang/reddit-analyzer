@@ -82,6 +82,10 @@ def chart_hour():
     return get_chart_data('analyzed_by_created_hours', (last_24_hours, current_hour), time_formats, 'hour')
 
 
+def timestamp_to_datetime(timestamp):
+    return datetime.fromtimestamp(timestamp)
+
+
 @app.route('/details')
 def details():
     chart_type = request.args.get('type')
@@ -91,9 +95,11 @@ def details():
     if chart_type == 'hour':
         start_timestamp = timestamp
         end_timestamp = timestamp + 3600  # Add 1 hour (3600 seconds) to the start timestamp
+        chart_label = f"{chart_type.capitalize()} {timestamp_to_datetime(timestamp).strftime('%Y-%m-%d %Hh')}"
     elif chart_type == 'day':
         start_timestamp = timestamp
         end_timestamp = timestamp + 86400  # Add 1 day (86400 seconds) to the start timestamp
+        chart_label = f"{chart_type.capitalize()} {timestamp_to_datetime(timestamp).strftime('%Y-%m-%d')}"
     else:
         # Handle invalid chart type
         return 'Invalid chart type'
@@ -110,7 +116,7 @@ def details():
     for submission in submissions:
         submission_id = submission['id']
         subreddit = submission['subreddit']
-        created = datetime.utcfromtimestamp(submission['created']).strftime('%Y-%m-%d %H:%M:%S')
+        created = timestamp_to_datetime(submission['created']).strftime('%Y-%m-%d %H:%M:%S')
         url = submission['url']
         selftext_length = submission['selftext_length']
 
@@ -164,7 +170,9 @@ def details():
             'effect': effect
         })
 
-    return render_template('details.html', result=result)
+    title = f"Details for {chart_label} of {subreddit}"
+
+    return render_template('details.html', result=result, title=title)
 
 
 if __name__ == '__main__':
