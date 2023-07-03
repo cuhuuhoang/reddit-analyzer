@@ -5,14 +5,13 @@ from urllib.parse import urlparse
 from flask import Flask, render_template, redirect, request
 
 from mongodb_client import MongoDBClient
+from system_config import Config
 
 app = Flask(__name__)
 
 # MongoDB connection
 client = MongoDBClient()
 database = client.database
-
-default_subreddit = ['bitcoin', 'wallstreetbets']
 
 
 def get_chart_data(collection_name, time_range, time_formats, chart_type):
@@ -53,6 +52,8 @@ def get_chart_data(collection_name, time_range, time_formats, chart_type):
             'sum_sentiment_score': sum_sentiment_score
         })
 
+    default_subreddit = Config.get().default_subreddit()
+
     return render_template('chart.html', chart_data=chart_data, time_formats=time_formats,
                            default_subreddit=default_subreddit, chart_type=chart_type)
 
@@ -75,8 +76,9 @@ def chart_day():
     Returns:
         The rendered chart template for the 'day' chart.
     """
+    display_day = Config.get().display_day()
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    last_month = today - timedelta(days=30)
+    last_month = today - timedelta(days=display_day)
 
     time_formats = {
         'unit': 'day',
@@ -98,8 +100,9 @@ def chart_hour():
     Returns:
         The rendered chart template for the 'hour' chart.
     """
+    display_hour = Config.get().display_hour()
     now = datetime.now()
-    last_24_hours = now - timedelta(hours=24)
+    last_24_hours = now - timedelta(hours=display_hour)
     current_hour = now.replace(minute=0, second=0, microsecond=0)
 
     time_formats = {

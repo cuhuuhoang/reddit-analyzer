@@ -68,6 +68,12 @@ def setup_index(path):
             ("subreddit", pymongo.ASCENDING)
         ])
 
+    # collection key_values
+    collection_key_values = database['key_values']
+    index_info = collection_key_values.index_information()
+    if 'key_1' not in index_info:
+        collection_key_values.create_index('key', unique=True)
+
     # close
     client.close_connection()
 
