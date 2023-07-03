@@ -6,6 +6,20 @@ Reddit Analyzer is a tool that crawls Reddit data, performs sentiment analysis, 
 
 Check out the live demo of Reddit Analyzer: [Demo Link](https://reddit.ikuhi.com/)
 
+## System Diagram
+
+![System Diagram](http://reddit.ikuhi.com/.public/reddit-analyzer/RedditAnalyzer.png)
+
+The system consists of three main components: the data fetching component, the analysis component, and the web server component.
+
+The data fetching component retrieves new submissions from a specified subreddit using the Reddit API. It interacts with the API using the PRAW library and updates the submission information in a MongoDB collection. The component also updates submission scores and calculates sentiment values for each submission using a SentimentAnalyzer object. The updated data is stored in separate collections within the MongoDB database.
+
+The analysis component utilizes the Apache Spark framework to analyze the fetched submission data. It establishes a connection to the MongoDB database and retrieves the submissions. The component performs sentiment analysis by grouping the submissions based on time (e.g., hourly) and subreddit. It calculates the sum of sentiment scores for each group and writes the analyzed results back to the MongoDB database.
+
+The web server component is implemented using the Flask framework. It provides routes for different endpoints, such as displaying charts and submission details. The routes interact with the MongoDB database to retrieve the necessary data and pass it to the corresponding HTML templates for rendering. The web server component handles requests from clients and serves the generated charts and submission details through the specified routes.
+
+Overall, the system's structure involves a data fetching component that retrieves and stores new submissions, an analysis component that performs sentiment analysis on the fetched data, and a web server component that serves the analyzed results and visualizations to clients through various routes. The MongoDB database acts as the central repository for storing the submissions, analysis results, and other related data.
+
 ## Usage
 
 To use Reddit Analyzer, you'll need to follow these steps:
