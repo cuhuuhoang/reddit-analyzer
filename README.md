@@ -1,6 +1,6 @@
 # Reddit Analyzer
 
-Reddit Analyzer is a tool that crawls Reddit data, performs sentiment analysis, and visualizes the sentiment scores on a web-based chart. It uses the PRAW library for crawling Reddit, the NLTK library for sentiment analysis using VADER (Valence Aware Dictionary and sEntiment Reasoner), and Flask for the web server.
+Reddit Analyzer is a tool that crawls Reddit data, performs sentiment analysis, and visualizes the sentiment scores on a web-based chart. It uses the PRAW library for crawling Reddit, the NLTK library for sentiment analysis using VADER (Valence Aware Dictionary and sEntiment Reasoner), Spark for data aggregation and Flask for the web server.
 
 ## Demo
 
@@ -68,6 +68,7 @@ python src/setup_index.py resources/mongo-docker-credential.json
 
 - [PRAW](https://praw.readthedocs.io/en/stable/): Python Reddit API Wrapper for crawling Reddit data.
 - [NLTK](https://www.nltk.org/_modules/nltk/sentiment/vader.html): Natural Language Toolkit for sentiment analysis using VADER (Valence Aware Dictionary and sEntiment Reasoner).
+- [Spark](https://spark.apache.org/docs/latest/index.html): Distributed computing framework for data aggregation.
 - [Flask](https://flask.palletsprojects.com/en/2.3.x/): Web framework for serving the sentiment analysis results.
 
 ## License
