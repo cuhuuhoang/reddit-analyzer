@@ -21,20 +21,22 @@
                 {{ title }}
             </div>
             <div class="card-body">
-                <a class="btn btn-primary" href="/chart/hour">Hourly Chart</a>
-                <a class="btn btn-primary" href="/chart/day">Daily Chart</a>
+                <a class="btn btn-light text-dark" href="/chart/hour">Hourly Chart</a>
+                <a class="btn btn-light text-dark" href="/chart/day">Daily Chart</a>
                 <hr />
                 <table id="detailsTable" class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Created</th>
-                            <th>URL</th>
-                            <th>Abs Sentiment</th>
-                            <th>Selftext Length</th>
-                            <th>Upvote Ratio</th>
-                            <th>Score</th>
-                            <th>Num Comments</th>
-                            <th>Sentiment Value</th>
+                            <th data-toggle="tooltip" data-placement="top" title="The creation date of the post">Created</th>
+                            <th data-toggle="tooltip" data-placement="top" title="The URL of the post">URL</th>
+                            <th data-toggle="tooltip" data-placement="top" title="The absolute sentiment of the post. Computed as sentiment_value * log(score).">
+                                Abs Sentiment
+                            </th>
+                            <th data-toggle="tooltip" data-placement="top" title="The length of the text in the post">Selftext Length</th>
+                            <th data-toggle="tooltip" data-placement="top" title="The upvote ratio of the post">Upvote Ratio</th>
+                            <th data-toggle="tooltip" data-placement="top" title="The score of the post. Calculated as the amount of upvotes minus downvotes">Score</th>
+                            <th data-toggle="tooltip" data-placement="top" title="The number of comments on the post">Num Comments</th>
+                            <th data-toggle="tooltip" data-placement="top" title="The sentiment value of the post. Indicates whether the user is positive or negative in their post content">Sentiment Value</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -52,6 +54,10 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                <div id="clickPrompt" class="text-muted p-2">
+                    The <code>Abs sentiment</code> is displayed in green if the value is positive, and red if it is negative. <br/>
+                    Please hover over the table headers for an explanation of each field.
+                </div>
             </div>
             <div class="card-footer">
                 <p>
@@ -70,7 +76,7 @@
     <script>
         $(document).ready(function () {
             $('#detailsTable').DataTable({
-                "order": [[2, "desc"]]  // Sort by Abs Sentiment column in descending order
+                "order": [[2, "desc"]], // Sort by Abs Sentiment column in descending order
             });
         });
     </script>

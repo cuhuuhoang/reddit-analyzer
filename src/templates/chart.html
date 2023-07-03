@@ -11,15 +11,20 @@
     <div class="container">
         <div class="card">
             <div class="card-header">
-                SentimentTracker {{ chart_type }}
+                Aggregate Sentiment Scores for Subreddits by {{ chart_type }}
             </div>
             <div class="card-body">
-                <a class="btn btn-primary" href="/chart/hour">Hourly Chart</a>
-                <a class="btn btn-primary" href="/chart/day">Daily Chart</a>
+                <a class="btn btn-light text-dark" href="/chart/hour">Hourly Chart</a>
+                <a class="btn btn-light text-dark" href="/chart/day">Daily Chart</a>
                 <hr />
                 <div class="card">
                     <div class="card-body">
                         <canvas id="myChart"></canvas>
+                        <br />
+                        <div id="clickPrompt" class="text-muted p-2">
+                            The sentiment score reflects the overall positivity of users' posts. Higher scores indicate a more positive sentiment expressed by users. <br />
+                            Click on a data point to see details
+                        </div>
                     </div>
                 </div>
             </div>
