@@ -11,9 +11,13 @@ Check out the live demo of Reddit Analyzer: [Demo Link](https://reddit.ikuhi.com
 ![System Diagram](http://reddit.ikuhi.com/.public/reddit-analyzer/RedditAnalyzer_trans.png)
 
 (1) The data fetching component retrieves new posts from a specified subreddit using the Reddit PRAW library.
+
 (2) The component updates post scores and calculates sentiment values for each post.
+
 (3) The updated data is stored within the MongoDB database.
+
 (4) The analysis component utilizes the Apache Spark framework to analyze the fetched post data. It establishes a connection to the MongoDB database and retrieves the posts. The component performs sentiment analysis by grouping the submissions based on time (e.g., hourly) and subreddit. It calculates the sum of sentiment scores for each group and writes the analyzed results back to the MongoDB database.
+
 (5) The web server component is implemented using the Flask framework. It provides routes for different endpoints, such as displaying charts and submission details. The routes interact with the MongoDB database to retrieve the necessary data and pass it to the corresponding HTML templates for rendering.
 
 [Slide](https://docs.google.com/presentation/d/17lG2dDLDoovDo2uMZcyHC-xHwkkPQ48E5lBV0djGDTc/edit?usp=sharing) in Vietnamese
