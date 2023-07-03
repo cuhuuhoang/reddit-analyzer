@@ -67,6 +67,7 @@ python src/setup_index.py resources/mongo-docker-credential.json
 ## Dependencies
 
 - [PRAW](https://praw.readthedocs.io/en/stable/): Python Reddit API Wrapper for crawling Reddit data.
+- [MongoDB](https://www.mongodb.com/docs/manual/core/document/): NoSQL database for storing the crawled Reddit data and sentiment analysis results.
 - [NLTK](https://www.nltk.org/_modules/nltk/sentiment/vader.html): Natural Language Toolkit for sentiment analysis using VADER (Valence Aware Dictionary and sEntiment Reasoner).
 - [Spark](https://spark.apache.org/docs/latest/index.html): Distributed computing framework for data aggregation.
 - [Flask](https://flask.palletsprojects.com/en/2.3.x/): Web framework for serving the sentiment analysis results.
