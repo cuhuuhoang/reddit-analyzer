@@ -20,6 +20,8 @@ The web server component is implemented using the Flask framework. It provides r
 
 Overall, the system's structure involves a data fetching component that retrieves and stores new submissions, an analysis component that performs sentiment analysis on the fetched data, and a web server component that serves the analyzed results and visualizations to clients through various routes. The MongoDB database acts as the central repository for storing the submissions, analysis results, and other related data.
 
+[Slide](https://docs.google.com/presentation/d/17lG2dDLDoovDo2uMZcyHC-xHwkkPQ48E5lBV0djGDTc/edit?usp=sharing) in Vietnamese
+
 ## Usage
 
 To use Reddit Analyzer, you'll need to follow these steps:
