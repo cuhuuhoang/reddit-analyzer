@@ -78,6 +78,13 @@ The Flask server will serve a web page at `http://localhost:8077/` where you can
 python src/setup_index.py resources/mongo-docker-credential.json
 ```
 
+7. (Optional) To have a Slack notification for crawl monitor, we can create a file resources/slack-credential.json with content:
+```
+{
+    "hook_url": "https://hooks.slack.com/services/XXXXXX/xxxx/xxxxxx"
+}
+```
+
 ## Dependencies
 
 - [PRAW](https://praw.readthedocs.io/en/stable/): Python Reddit API Wrapper for crawling Reddit data.
