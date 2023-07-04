@@ -12,5 +12,5 @@
   "default_subreddit": ["bitcoin", "wallstreetbets"],
   "display_day": 30,
   "display_hour": 24,
-  "check_crawl_interval": 3600
+  "check_crawl_interval": 7200
 }
