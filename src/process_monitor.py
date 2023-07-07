@@ -129,7 +129,7 @@ class ProcessMonitor:
 
                 if not max_analyzed_by_created_hours \
                         or datetime.fromtimestamp(max_analyzed_by_created_hours['timestamp']) < \
-                        datetime.now() - timedelta(hours=6):
+                        datetime.now() - timedelta(hours=12):
                     # Notify if analyzed_by_created_hours is not updated for a long time
                     self.notify_error("analyzed_by_created_hours is not updated for a long time.")
 
