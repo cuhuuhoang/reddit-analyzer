@@ -26,6 +26,3 @@ class Config:
 
     def display_hour(self):
         return Config._config["display_hour"]
-
-    def check_crawl_interval(self):
-        return Config._config["check_crawl_interval"]

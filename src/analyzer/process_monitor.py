@@ -85,63 +85,42 @@ class ProcessMonitor:
         mongo_client = None
         try:
             mongo_client = MongoDBClient()
-            last_crawl_check_time = mongo_client.database.key_values.find_one({'key': 'last_crawl_check_time'})
 
-            if last_crawl_check_time is None:
-                mongo_client.database.key_values.insert_one(
-                    {'key': 'last_crawl_check_time', 'value': datetime.now()}
-                )
-                logging.info("No previous check")
-                return
+            # Check max submission created timestamp
+            max_submission_created = mongo_client.database.submissions.find_one(
+                projection=['created'],
+                sort=[('created', -1)]
+            )
 
-            min_valid_check_time = datetime.now() - timedelta(seconds=Config.get().check_crawl_interval())
-            if last_crawl_check_time['value'] < min_valid_check_time:
-                # Perform checks for various timestamps
-                logging.info("Performing check...")
+            if not max_submission_created or datetime.fromtimestamp(max_submission_created['created']) < \
+                    datetime.now() - timedelta(hours=1):
+                # Notify if submissions are too old
+                self.notify_error("No new posts. Submissions are too old.")
 
-                # Check max submission created timestamp
-                max_submission_created = mongo_client.database.submissions.find_one(
-                    projection=['created'],
-                    sort=[('created', -1)]
-                )
+            # Check max analyzed_by_created_days timestamp
+            max_analyzed_by_created_days = mongo_client.database.analyzed_by_created_days.find_one(
+                projection=['timestamp'],
+                sort=[('timestamp', -1)]
+            )
 
-                if not max_submission_created or datetime.fromtimestamp(max_submission_created['created']) < \
-                        datetime.now() - timedelta(hours=1):
-                    # Notify if submissions are too old
-                    self.notify_error("No new posts. Submissions are too old.")
+            if not max_analyzed_by_created_days \
+                    or datetime.fromtimestamp(max_analyzed_by_created_days['timestamp']) < \
+                    datetime.now() - timedelta(hours=30):
 
-                # Check max analyzed_by_created_days timestamp
-                max_analyzed_by_created_days = mongo_client.database.analyzed_by_created_days.find_one(
-                    projection=['timestamp'],
-                    sort=[('timestamp', -1)]
-                )
+                # Notify if analyzed_by_created_days is not updated for a long time
+                self.notify_error("analyzed_by_created_days is not updated for a long time.")
 
-                if not max_analyzed_by_created_days \
-                        or datetime.fromtimestamp(max_analyzed_by_created_days['timestamp']) < \
-                        datetime.now() - timedelta(hours=30):
+            # Check max analyzed_by_created_hours timestamp
+            max_analyzed_by_created_hours = mongo_client.database.analyzed_by_created_hours.find_one(
+                projection=['timestamp'],
+                sort=[('timestamp', -1)]
+            )
 
-                    # Notify if analyzed_by_created_days is not updated for a long time
-                    self.notify_error("analyzed_by_created_days is not updated for a long time.")
-
-                # Check max analyzed_by_created_hours timestamp
-                max_analyzed_by_created_hours = mongo_client.database.analyzed_by_created_hours.find_one(
-                    projection=['timestamp'],
-                    sort=[('timestamp', -1)]
-                )
-
-                if not max_analyzed_by_created_hours \
-                        or datetime.fromtimestamp(max_analyzed_by_created_hours['timestamp']) < \
-                        datetime.now() - timedelta(hours=12):
-                    # Notify if analyzed_by_created_hours is not updated for a long time
-                    self.notify_error("analyzed_by_created_hours is not updated for a long time.")
-
-                # Update last_crawl_check_time
-                mongo_client.database.key_values.update_one(
-                    {'key': 'last_crawl_check_time'},
-                    {'$set': {'value': datetime.now()}}
-                )
-            else:
-                logging.info("Still waiting for the next check...")
+            if not max_analyzed_by_created_hours \
+                    or datetime.fromtimestamp(max_analyzed_by_created_hours['timestamp']) < \
+                    datetime.now() - timedelta(hours=12):
+                # Notify if analyzed_by_created_hours is not updated for a long time
+                self.notify_error("analyzed_by_created_hours is not updated for a long time.")
 
         except Exception as e:
             if mongo_client is not None:
