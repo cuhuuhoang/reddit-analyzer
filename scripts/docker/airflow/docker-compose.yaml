@@ -1,0 +1,161 @@
+---
+version: '3'
+x-airflow-common:
+  &airflow-common
+  image: 'reddit_airflow'
+  # build: .
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: mysql+mysqldb://user_airflow:pwairflow@mysql:3306/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+mysql://user_airflow:pwairflow@mysql:3306/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
+    AIRFLOW__WEBSERVER__BASE_URL: 'http://localhost:8080'
+  volumes:
+    - ${REPO_DIR}:/opt/airflow/dags
+    - ${DATA_DIR}/logs:/opt/airflow/logs
+    - ${DATA_DIR}/data:/opt/airflow/data
+  user: "${AIRFLOW_UID}:${AIRFLOW_GID}"
+  depends_on:
+    &airflow-common-depends-on
+    redis:
+      condition: service_healthy
+    mysql:
+      condition: service_healthy
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: airflow
+      MYSQL_USER: user_airflow
+      MYSQL_PASSWORD: pwairflow
+      MYSQL_ROOT_PASSWORD: pwairflow
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - ${DATA_DIR}/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
+    restart: always
+
+  redis:
+    image: redis:latest
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    restart: always
+
+  mongodb:
+    image: bitnami/mongodb:5.0-debian-10
+    environment:
+      MONGODB_ROOT_PASSWORD: dbpw11
+    volumes:
+      - ${DATA_DIR}/mongodb:/bitnami/mongodb
+    ports:
+      - 27017:27017
+    restart: always
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      _PIP_ADDITIONAL_REQUIREMENTS: ''
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+
+  airflow-worker:
+    <<: *airflow-common
+    command: celery worker --without-gossip --without-mingle
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    environment:
+      <<: *airflow-common-env
+      # Required to handle warm shutdown of the celery workers properly
+      # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
+      DUMB_INIT_SETSID: "0"
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+
+  airflow-worker-1:
+    <<: *airflow-common
+    command: celery worker -q high_cpu --without-gossip --without-mingle
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    environment:
+      <<: *airflow-common-env
+      # Required to handle warm shutdown of the celery workers properly
+      # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
+      DUMB_INIT_SETSID: "0"
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+
+  flower:
+    <<: *airflow-common
+    command: celery flower
+    ports:
+      - 5555:5555
+    environment:
+      <<: *airflow-common-env
+      AIRFLOW__CELERY__FLOWER_BASIC_AUTH: 'admin:airflow1'
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+
+  airflow-jupyter:
+    <<: *airflow-common
+    entrypoint: /app/jupyter
+    ports:
+      - 8888:8888
+    environment:
+      <<: *airflow-common-env
+      JUPYTER_SECRET: 'airflow1'
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
