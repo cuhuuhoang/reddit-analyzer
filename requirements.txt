@@ -1,6 +1,9 @@
-praw
-pymongo
-spacy
-nltk
-pyspark
-findspark
+praw~=7.7.0
+pymongo~=4.4.0
+spacy~=3.5.4
+nltk~=3.8.1
+pyspark~=3.4.1
+findspark~=2.0.1
+
+Flask~=2.2.5
+requests~=2.31.0

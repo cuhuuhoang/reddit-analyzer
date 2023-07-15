@@ -1,12 +1,13 @@
 import json
+import os
 import traceback
 from datetime import datetime, timedelta
 
 import requests
 
-from logging_config import *
-from mongodb_client import MongoDBClient
-from system_config import Config
+from src.core.logging_config import *
+from src.core.mongodb_client import MongoDBClient
+from src.core.system_config import Config
 
 
 class ProcessMonitor:
@@ -18,7 +19,7 @@ class ProcessMonitor:
         "hook_url": "https://hooks.slack.com/services/XXXXXX/xxxx/xxxxxx"
     }
     """
-    def __init__(self, slack_credential_file='resources/slack-credential.json'):
+    def __init__(self, slack_credential_file='slack-credential.json'):
         """
         Constructor for ProcessMonitor class. Initializes the ProcessMonitor object and reads the Slack
         credential file to obtain the Slack hook URL. If the file is not found, it sets the `only_console`
@@ -31,7 +32,8 @@ class ProcessMonitor:
             None
         """
         try:
-            with open(slack_credential_file) as json_file:
+            abs_path = os.environ.get('SOURCE_DIR') + '/resources/' + slack_credential_file
+            with open(abs_path) as json_file:
                 credentials = json.load(json_file)
                 hook_url = credentials.get('hook_url')
                 if hook_url:

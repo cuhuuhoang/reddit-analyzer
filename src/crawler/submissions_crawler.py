@@ -1,10 +1,11 @@
 import hashlib
+import logging
 import time
 
-from logging_config import *
-from reddit_crawler_utils import create_reddit_instance
-from sentiment_analyzer import PARSER_KEY, SentimentAnalyzer
-from mongodb_client import MongoDBClient
+from src.core.logging_config import *
+from src.crawler.reddit_crawler_utils import create_reddit_instance
+from src.analyzer.sentiment_analyzer import PARSER_KEY, SentimentAnalyzer
+from src.core.mongodb_client import MongoDBClient
 
 
 def update_submission(submission_collection, submission_data):
@@ -159,6 +160,7 @@ def fetch_new_submissions(subreddit_name, analyzer, limit):
     new_post_count = 0
     updated_post_score_count = 0
     updated_sentiment_count = 0
+    total_post_count = 0
 
     logging.info(f"Fetched posts from praw")
     for submission in submissions:
@@ -198,6 +200,9 @@ def fetch_new_submissions(subreddit_name, analyzer, limit):
         if update_submission_scores(submission_scores_collection, submission_score_data):
             updated_post_score_count += 1
 
+        total_post_count += 1
+
+        logging.info(f"Saved {total_post_count} post: {submission.id} ")
     logging.info(f"New posts added: {new_post_count}; Updated post score: {updated_post_score_count}; Sentiment Value "
                  f"updated: {updated_sentiment_count}")
     client.close_connection()

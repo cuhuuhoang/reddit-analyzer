@@ -4,8 +4,8 @@ from urllib.parse import urlparse
 
 from flask import Flask, render_template, redirect, request
 
-from mongodb_client import MongoDBClient
-from system_config import Config
+from src.core.mongodb_client import MongoDBClient
+from src.core.system_config import Config
 
 app = Flask(__name__)
 

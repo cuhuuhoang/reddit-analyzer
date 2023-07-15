@@ -5,5 +5,5 @@
 # Construct the connection string
 connection_string="$(get_connection_string "$1")"
 
-[ -d "output/db_dump" ] && rm -r "output/db_dump"
-mongodump --uri="$connection_string" --out "output/db_dump"
+[ -d "/opt/airflow/data/db_dump" ] && rm -r "/opt/airflow/data/db_dump"
+mongodump --uri="$connection_string" --out "/opt/airflow/data/db_dump"

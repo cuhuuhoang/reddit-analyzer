@@ -1,4 +1,5 @@
 import json
+import os
 
 
 class Config:
@@ -13,11 +14,9 @@ class Config:
 
     def __init__(self):
         if not Config._config:
-            with open("resources/system-config.json") as json_file:
+            abs_path = os.environ.get('SOURCE_DIR') + '/resources/system-config.json'
+            with open(abs_path) as json_file:
                 Config._config = json.load(json_file)
-
-    def subreddit_list(self):
-        return Config._config["subreddit_list"]
 
     def default_subreddit(self):
         return Config._config["default_subreddit"]

@@ -6,7 +6,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, floor, log, when
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, BooleanType, DoubleType
 
-from mongodb_client import MongoDBClient
+from src.core.mongodb_client import MongoDBClient
 
 
 class SparkAnalyzer:
@@ -25,7 +25,8 @@ class SparkAnalyzer:
 
         findspark.init()
 
-        [database, connection_string] = MongoDBClient.get_mongo_connection_string()
+        abs_path = os.environ.get('SOURCE_DIR') + "/resources/" + os.environ.get('CREDENTIAL_FILE')
+        [database, connection_string] = MongoDBClient.get_mongo_connection_string(abs_path)
 
         self.client = MongoDBClient()
         self.spark = SparkSession \

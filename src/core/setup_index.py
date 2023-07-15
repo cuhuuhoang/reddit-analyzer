@@ -2,7 +2,7 @@ import sys
 
 import pymongo
 
-from mongodb_client import MongoDBClient
+from src.core.mongodb_client import MongoDBClient
 
 
 def setup_index(path):

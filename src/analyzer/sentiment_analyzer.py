@@ -1,5 +1,5 @@
 import nltk
-import spacy
+import spacy as sp
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 PARSER_KEY = "SentimentAnalyzer_v1"
@@ -12,13 +12,13 @@ class SentimentAnalyzer:
 
         # Download en_core_web_sm
         try:
-            spacy.load('en_core_web_sm')
+            sp.load('en_core_web_sm')
         except OSError:
             print("Downloading 'en_core_web_sm' model...")
-            spacy.cli.download('en_core_web_sm')
+            sp.cli.download('en_core_web_sm')
 
         # Initialize spaCy and the VADER sentiment analyzer
-        self.nlp = spacy.load('en_core_web_sm')
+        self.nlp = sp.load('en_core_web_sm')
         self.sia = SentimentIntensityAnalyzer()
 
     def get_sentiment(self, text):
