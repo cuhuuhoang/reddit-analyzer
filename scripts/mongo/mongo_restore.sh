@@ -5,5 +5,5 @@
 # Construct the connection string
 connection_string="$(get_connection_string "$1")"
 
-# Connect to MongoDB using mongosh
-mongosh "$connection_string"
+[ ! -d "output/db_dump" ] && exit 1
+mongorestore --uri="$connection_string" --drop "output/db_dump/reddit_analyzer"

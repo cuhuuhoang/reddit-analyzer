@@ -5,5 +5,5 @@
 # Construct the connection string
 connection_string="$(get_connection_string "$1")"
 
-# Connect to MongoDB using mongosh
-mongosh "$connection_string"
+[ -d "output/db_dump" ] && rm -r "output/db_dump"
+mongodump --uri="$connection_string" --out "output/db_dump"
