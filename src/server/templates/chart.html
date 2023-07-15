@@ -6,6 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+    <script src="https://s3.tradingview.com/tv.js"></script>
 </head>
 <body>
     <div class="container">
@@ -26,6 +27,18 @@
                             Click on a data point to see details
                         </div>
                     </div>
+                </div>
+                <hr />
+                <span>NASDAQ Chart</span>
+                <br />
+                <div class="tradingview-widget-container">
+                  <div id="tradingview_eb146" style="height: 480px"></div>
+                </div>
+                <hr />
+                <span>BTC/USD Chart</span>
+                <br />
+                <div class="tradingview-widget-container">
+                  <div id="tradingview_db611" style="height: 480px"></div>
                 </div>
             </div>
             <div class="card-footer">
@@ -49,6 +62,8 @@
         var chartData = {{ chart_data | tojson }};
         var timeFormats = {{ time_formats | tojson }};
         var defaultSubreddits = {{ default_subreddit | tojson }};
+        var chartType = '{{ chart_type }}';
+        var interval = chartType === 'hour' ? 'H' : 'D';
 
         // Prepare the datasets for the chart
         var datasets = [];
@@ -137,6 +152,39 @@
                 window.location.href = url;
             }
         };
+
+        // Chart
+        new TradingView.widget(
+              {
+              "autosize": true,
+              "symbol": "SKILLING:NASDAQ",
+              "interval": interval,
+              "timezone": "Asia/Ho_Chi_Minh",
+              "theme": "light",
+              "style": "2",
+              "locale": "en",
+              "toolbar_bg": "#f1f3f6",
+              "enable_publishing": false,
+              "allow_symbol_change": true,
+              "container_id": "tradingview_eb146"
+            }
+          );
+
+        new TradingView.widget(
+            {
+              "autosize": true,
+              "symbol": "BINANCE:BTCUSD",
+              "interval": interval,
+              "timezone": "Asia/Ho_Chi_Minh",
+              "theme": "light",
+              "style": "2",
+              "locale": "en",
+              "toolbar_bg": "#f1f3f6",
+              "enable_publishing": false,
+              "allow_symbol_change": true,
+              "container_id": "tradingview_db611"
+            }
+          );
     </script>
 </body>
 </html>
