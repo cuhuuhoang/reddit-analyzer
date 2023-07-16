@@ -1,10 +1,10 @@
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
+from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.utils.dates import days_ago
 
 from src.analyzer.process_monitor import ProcessMonitor
-from src.analyzer.spark_analyzer import SparkAnalyzer
 
 default_args = {
     'owner': 'airflow',
@@ -21,9 +21,16 @@ dag = DAG(
     max_active_runs=1
 )
 
-spark_analyze = PythonOperator(
+spark_analyze = SparkSubmitOperator(
     task_id='spark_analyze',
-    python_callable=SparkAnalyzer().analyze_by_hours,
+    application='/opt/airflow/dags/src/analyzer/spark_analyzer.py',
+    packages='org.mongodb.spark:mongo-spark-connector_2.12:3.0.1',
+    conf={
+        'spark.mongodb.input.uri': 'mongodb://root:dbpw11@mongodb:27017/reddit_analyzer?authSource=admin'
+    },
+    executor_memory='1g',
+    driver_memory='1g',
+    conn_id='spark_local',
     dag=dag
 )
 

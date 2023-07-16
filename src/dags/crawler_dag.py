@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
@@ -29,7 +30,9 @@ def fetch_submissions(subreddit):
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(1)
+    'start_date': days_ago(1),
+    'retries': 3,
+    'retry_delay': timedelta(minutes=5),
 }
 
 dag = DAG(

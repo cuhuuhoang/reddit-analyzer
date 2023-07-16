@@ -1,7 +1,5 @@
-import os
 import time
 
-import findspark
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, floor, log, when
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, BooleanType, DoubleType
@@ -20,23 +18,9 @@ class SparkAnalyzer:
         Returns:
             None
         """
-        os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
-        os.environ["SPARK_HOME"] = "/content/spark-3.3.2-bin-hadoop3"
-
-        findspark.init()
-
-        abs_path = os.environ.get('SOURCE_DIR') + "/resources/" + os.environ.get('CREDENTIAL_FILE')
-        [database, connection_string] = MongoDBClient.get_mongo_connection_string(abs_path)
 
         self.client = MongoDBClient()
-        self.spark = SparkSession \
-            .builder \
-            .master('local') \
-            .appName('SubmissionAnalyzer') \
-            .config('spark.jars.packages', 'org.mongodb.spark:mongo-spark-connector_2.12:3.0.1') \
-            .config('spark.mongodb.input.uri', connection_string) \
-            .config('spark.mongodb.output.uri', connection_string) \
-            .getOrCreate()
+        self.spark = SparkSession.builder.appName('SubmissionAnalyzer').getOrCreate()
 
     def get_submissions_df(self):
         """
