@@ -26,12 +26,7 @@ Check out the live demo of Reddit Analyzer: [Demo Link](https://reddit.ikuhi.com
 
 To use Reddit Analyzer, you'll need to follow these steps:
 
-1. Install the required dependencies by running:
-```
-pip install -r requirements.txt
-```
-
-2. Configure the Reddit API credentials in the `resources/praw-credential.json` file. Make sure to provide your Reddit username, password, client ID, and client secret. You can obtain the client ID and client secret by creating a Reddit application on the Reddit website.
+1. Configure the Reddit API credentials in the `resources/praw-credential.json` file. Make sure to provide your Reddit username, password, client ID, and client secret. You can obtain the client ID and client secret by creating a Reddit application on the Reddit website.
 Example:
 ```
 {
@@ -40,7 +35,7 @@ Example:
   "user_agent": "python/praw:CryptoTrending:v1.0 (by /u/huuhoangcu)"
 }
 ```
-3. Configure the MongoDB credentials in the `resources/mongo-credential.json` file.
+2. Configure the MongoDB credentials in the `resources/mongo-credential.json` file.
 Example:
 ```
 {
@@ -52,35 +47,39 @@ Example:
 }
 ```
 
-4. Start the data crawler to fetch Reddit submissions. It also perform sentiment analysis on the crawled data. Sentiment analysis will be applied to the crawled submissions, and the results will be stored in the MongoDB database.
+3. Start the airflow in docker-compose to start DAG to crawl Reddit submissions. It also perform sentiment analysis on the crawled data. Sentiment analysis will be applied to the crawled submissions, and the results will be stored in the MongoDB database. Another DAG to do spark analysis on submissions data.
 ```
 python src/submissions_main.py
 ```
 Or build docker image for crawler and run
 ```
-# resources/mongo-docker-credential.json should exist
-scripts/docker/crawler/build.sh docker
-scripts/docker/crawler/run.sh
+# build airflow image
+scripts/docker/airflow/build.sh
+# to start airflow resources/mongo-docker-compose-credential.json should exist
+scripts/docker/airflow/docker-compose_start.sh
+# to stop
+scripts/docker/airflow/docker-compose_stop.sh
+# then go to localhost:8080 to start DAG
 ```
 
-5. Start the Flask server to visualize the sentiment scores:
+4. Start the Flask server to visualize the sentiment scores:
 ```
-python src/server.py
+scripts/docker/server/run_local.sh
 ```
 Or build docker image for server and run
 ```
 # resources/mongo-docker-credential.json should exist
-scripts/docker/server/build.sh docker
-scripts/docker/server/run.sh
+scripts/docker/server/build_image.sh
+scripts/docker/server/run_image.sh
 ```
 The Flask server will serve a web page at `http://localhost:8077/` where you can see a chart visualizing the sentiment scores by subreddit.
 
-6. Initiate collection index with
+5. Initiate collection index with
 ```
-python src/setup_index.py resources/mongo-docker-credential.json
+scripts/mongo/setup_index.sh
 ```
 
-7. (Optional) To have a Slack notification for crawl monitor, we can create a file resources/slack-credential.json with content:
+6. (Optional) To have a Slack notification for crawl monitor, we can create a file resources/slack-credential.json with content:
 ```
 {
     "hook_url": "https://hooks.slack.com/services/XXXXXX/xxxx/xxxxxx"
