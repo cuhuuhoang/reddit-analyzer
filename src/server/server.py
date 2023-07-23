@@ -4,14 +4,16 @@ from urllib.parse import urlparse
 
 from flask import Flask, render_template, redirect, request
 
-from src.core.mongodb_client import MongoDBClient
+from src.core.mongo_connection import MongoConnection
+from src.core.mongo_credential import MongoCredential
 from src.core.system_config import Config
 
 app = Flask(__name__)
 
+
 # MongoDB connection
-client = MongoDBClient()
-database = client.database
+connection = MongoConnection(MongoCredential.read_from_env())
+database = connection.database
 
 
 def get_chart_data(collection_name, time_range, time_formats, chart_type):

@@ -15,7 +15,6 @@ x-airflow-common:
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     AIRFLOW__WEBSERVER__BASE_URL: 'http://localhost:8080'
     SOURCE_DIR: '/opt/airflow/dags'
-    CREDENTIAL_FILE: 'mongo-docker-compose-credential.json'
     PYTHONPATH: '/opt/airflow/dags'
   volumes:
     - ${REPO_DIR}:/opt/airflow/dags

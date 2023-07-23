@@ -2,6 +2,6 @@
 
 export PYTHONPATH=$(pwd)
 export SOURCE_DIR=$(pwd)
-export CREDENTIAL_FILE=mongo-local-credential.json
+export CREDENTIAL_PATH=resources/mongo-local2-credential.json
 
 python3 src/server/server.py

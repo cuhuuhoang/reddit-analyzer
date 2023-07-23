@@ -10,5 +10,5 @@ docker rm "$name"_instance || true
 docker run -d --name "$name"_instance \
   --network internal \
   --restart unless-stopped \
-  -e CREDENTIAL_FILE=mongo-docker-prod-credential.json \
+  -e CREDENTIAL_PATH=resources/mongo-docker-prod2-credential.json \
   "$name"

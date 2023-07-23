@@ -6,8 +6,7 @@ from datetime import datetime, timedelta
 import requests
 
 from src.core.logging_config import *
-from src.core.mongodb_client import MongoDBClient
-from src.core.system_config import Config
+from src.core.mongo_connection import MongoConnection
 
 
 class ProcessMonitor:
@@ -19,18 +18,20 @@ class ProcessMonitor:
         "hook_url": "https://hooks.slack.com/services/XXXXXX/xxxx/xxxxxx"
     }
     """
-    def __init__(self, slack_credential_file='slack-credential.json'):
+    def __init__(self, mongo_credential, slack_credential_file='slack-credential.json'):
         """
         Constructor for ProcessMonitor class. Initializes the ProcessMonitor object and reads the Slack
         credential file to obtain the Slack hook URL. If the file is not found, it sets the `only_console`
         flag to `True`, indicating that only console notifications should be used.
 
         Args:
+            mongo_credential: mongo connection string
             slack_credential_file (str): The path to the Slack credential file.
 
         Returns:
             None
         """
+        self.mongo_credential = mongo_credential
         try:
             abs_path = os.environ.get('SOURCE_DIR') + '/resources/' + slack_credential_file
             with open(abs_path) as json_file:
@@ -82,12 +83,12 @@ class ProcessMonitor:
         Returns:
             None
         """
-        mongo_client = None
+        mongo_connection = None
         try:
-            mongo_client = MongoDBClient()
+            mongo_connection = MongoConnection(self.mongo_credential)
 
             # Check max submission created timestamp
-            max_submission_created = mongo_client.database.submissions.find_one(
+            max_submission_created = mongo_connection.database.submissions.find_one(
                 projection=['created'],
                 sort=[('created', -1)]
             )
@@ -98,7 +99,7 @@ class ProcessMonitor:
                 self.notify_error("No new posts. Submissions are too old.")
 
             # Check max analyzed_by_created_days timestamp
-            max_analyzed_by_created_days = mongo_client.database.analyzed_by_created_days.find_one(
+            max_analyzed_by_created_days = mongo_connection.database.analyzed_by_created_days.find_one(
                 projection=['timestamp'],
                 sort=[('timestamp', -1)]
             )
@@ -111,7 +112,7 @@ class ProcessMonitor:
                 self.notify_error("analyzed_by_created_days is not updated for a long time.")
 
             # Check max analyzed_by_created_hours timestamp
-            max_analyzed_by_created_hours = mongo_client.database.analyzed_by_created_hours.find_one(
+            max_analyzed_by_created_hours = mongo_connection.database.analyzed_by_created_hours.find_one(
                 projection=['timestamp'],
                 sort=[('timestamp', -1)]
             )
@@ -123,8 +124,8 @@ class ProcessMonitor:
                 self.notify_error("analyzed_by_created_hours is not updated for a long time.")
 
         except Exception as e:
-            if mongo_client is not None:
-                mongo_client.close_connection()
+            if mongo_connection is not None:
+                mongo_connection.close_connection()
             self.notify_error(f"An exception occurred when do monitor: {str(e)}")
             traceback.print_exc()
 

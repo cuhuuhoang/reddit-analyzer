@@ -1,14 +1,16 @@
+import sys
 import time
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, floor, log, when
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, BooleanType, DoubleType
 
-from src.core.mongodb_client import MongoDBClient
+from src.core.mongo_connection import MongoConnection
+from src.core.mongo_credential import MongoCredential
 
 
 class SparkAnalyzer:
-    def __init__(self):
+    def __init__(self, _mongo_connection_string, _mongo_database_name):
         """
         Initializes the SparkAnalyzer class.
 
@@ -19,7 +21,7 @@ class SparkAnalyzer:
             None
         """
 
-        self.client = MongoDBClient()
+        self.connection = MongoConnection(MongoCredential(_mongo_connection_string, _mongo_database_name))
         self.spark = SparkSession.builder.appName('SubmissionAnalyzer').getOrCreate()
 
     def get_submissions_df(self):
@@ -169,7 +171,7 @@ class SparkAnalyzer:
             .withColumnRenamed("sum(sentiment_composite)", "sum_sentiment_score")
 
         # Write the result back to the MongoDB collection analyzed_by_created_hours
-        database = self.client.database
+        database = self.connection.database
         output_collection = database['analyzed_by_created_hours']
         # Iterate over the result_df DataFrame and perform an upsert operation
         for row in result_df.collect():
@@ -203,7 +205,7 @@ class SparkAnalyzer:
             .withColumnRenamed("sum(sentiment_composite)", "sum_sentiment_score")
 
         # Write the result back to the MongoDB collection analyzed_by_created_days
-        database = self.client.database
+        database = self.connection.database
         output_collection = database['analyzed_by_created_days']
         # Iterate over the result_df DataFrame and perform an upsert operation
         for row in result_df.collect():
@@ -227,11 +229,13 @@ class SparkAnalyzer:
         """
         self.spark.stop()
         # close connection
-        self.client.close_connection()
+        self.connection.close_connection()
 
 
 if __name__ == '__main__':
-    analyzer = SparkAnalyzer()
+    mongo_connection_string = sys.argv[1]
+    mongo_database_name = sys.argv[2]
+    analyzer = SparkAnalyzer(mongo_connection_string, mongo_database_name)
     analyzer.analyze_by_hours()
     analyzer.analyze_by_days()
     analyzer.stop()

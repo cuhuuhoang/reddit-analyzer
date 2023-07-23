@@ -1,11 +1,10 @@
 import hashlib
-import logging
 import time
 
-from src.core.logging_config import *
-from src.crawler.reddit_crawler_utils import create_reddit_instance
 from src.analyzer.sentiment_analyzer import PARSER_KEY, SentimentAnalyzer
-from src.core.mongodb_client import MongoDBClient
+from src.core.logging_config import *
+from src.core.mongo_connection import MongoConnection
+from src.crawler.reddit_crawler_utils import create_reddit_instance
 
 
 def update_submission(submission_collection, submission_data):
@@ -132,22 +131,21 @@ def update_sentiment_values(collection, analyzer, submission_data):
     return True
 
 
-def fetch_new_submissions(subreddit_name, analyzer, limit):
+def fetch_new_submissions(subreddit_name, analyzer, limit, mongo_credential):
     """
     This is the main function that fetches new submissions from a specified subreddit using the Reddit API.
-    It creates connections to the MongoDB database using the MongoDBClient class. It retrieves the submissions
-    from the subreddit, iterates over each submission, process and update database with corresponding function.
+    It creates connections to the MongoDB database. It retrieves the submissions from the subreddit,
+    iterates over each submission, process and update database with corresponding function.
 
     Args:
         subreddit_name (str): The name of the subreddit to fetch submissions from.
         analyzer (SentimentAnalyzer): The sentiment analyzer object.
         limit (int): The maximum number of submissions to fetch.
+        mongo_credential: information to connect to mongo
 
-    Returns:
-        None
     """
     # Access the database
-    client = MongoDBClient()
+    client = MongoConnection(mongo_credential)
     database = client.database
     submissions_collection = database['submissions']
     submission_scores_collection = database['submission_scores']
@@ -206,9 +204,3 @@ def fetch_new_submissions(subreddit_name, analyzer, limit):
     logging.info(f"New posts added: {new_post_count}; Updated post score: {updated_post_score_count}; Sentiment Value "
                  f"updated: {updated_sentiment_count}")
     client.close_connection()
-
-
-if __name__ == '__main__':
-    logging.info("Starting fetch_new_submissions...")
-    _analyzer = SentimentAnalyzer()
-    fetch_new_submissions('bitcoin', _analyzer, 200)

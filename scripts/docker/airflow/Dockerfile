@@ -30,7 +30,7 @@ RUN dpkg -i /tmp/mongodb-database-tools.deb
 USER airflow
 RUN pip install --no-cache-dir jupyter-core jupyter requests \
     boto3 awscli apache-airflow-providers-apache-spark pyspark findspark \
-    praw pymongo spacy nltk
+    praw pymongo spacy nltk apache-airflow-providers-mongo
 RUN echo 'export PS1="\[\033[01;32m\]\u\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ "' >> /home/airflow/.bash_profile
 RUN echo "export PATH='$PATH'" >> /home/airflow/.bash_profile
 
