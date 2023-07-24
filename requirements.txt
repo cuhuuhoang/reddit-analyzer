@@ -7,3 +7,5 @@ findspark~=2.0.1
 
 Flask~=2.2.5
 requests~=2.31.0
+
+beautifulsoup4~=4.12.2

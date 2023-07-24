@@ -145,8 +145,8 @@ def fetch_new_submissions(subreddit_name, analyzer, limit, mongo_credential):
 
     """
     # Access the database
-    client = MongoConnection(mongo_credential)
-    database = client.database
+    connection = MongoConnection(mongo_credential)
+    database = connection.database
     submissions_collection = database['submissions']
     submission_scores_collection = database['submission_scores']
     submission_sentiments_collection = database['submission_sentiments']
@@ -203,4 +203,4 @@ def fetch_new_submissions(subreddit_name, analyzer, limit, mongo_credential):
         logging.info(f"Saved {total_post_count} post: {submission.id} ")
     logging.info(f"New posts added: {new_post_count}; Updated post score: {updated_post_score_count}; Sentiment Value "
                  f"updated: {updated_sentiment_count}")
-    client.close_connection()
+    connection.close_connection()
