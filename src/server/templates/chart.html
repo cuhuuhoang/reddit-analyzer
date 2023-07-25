@@ -99,6 +99,18 @@
             },
             options: {
                 responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var dataset = context.dataset;
+                                var index = context.dataIndex;
+                                var tooltipValue = chartData[dataset.label][index].tooltip;
+                                return dataset.label + ": " + tooltipValue;
+                            }
+                        }
+                    }
+                },
                 scales: {
                     x: {
                         type: 'time',
@@ -117,6 +129,7 @@
                 }
             }
         });
+
 
         function getRandomColor() {
             var letters = '0123456789ABCDEF';

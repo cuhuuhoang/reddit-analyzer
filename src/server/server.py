@@ -36,7 +36,8 @@ def get_chart_data(collection_name, time_range, time_formats, chart_type):
 
         chart_data[subreddit].append({
             'timestamp': timestamp,
-            'sum_sentiment_score': sum_sentiment_score
+            'sum_sentiment_score': sum_sentiment_score,
+            'tooltip': round(sum_sentiment_score, 2)
         })
 
     if chart_type == 'day':
@@ -67,7 +68,8 @@ def get_chart_data(collection_name, time_range, time_formats, chart_type):
                                 max_finance_indexes_value - min_finance_indexes_value)
                     chart_data[key].append({
                         'timestamp': timestamp,
-                        'sum_sentiment_score': scaled_value
+                        'sum_sentiment_score': scaled_value,
+                        'tooltip': round(value, 2)
                     })
 
     default_subreddit = Config.get().default_subreddit()
