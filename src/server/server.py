@@ -17,31 +17,16 @@ database = connection.database
 
 
 def get_chart_data(collection_name, time_range, time_formats, chart_type):
-    """
-    This function retrieves and processes filtered data from a specified MongoDB collection.
-    It filters the data based on the given time range and organizes it to be used for generating charts.
-    It returns the rendered template for displaying the chart.
-
-    Args:
-        collection_name (str): The name of the collection in the database.
-        time_range (tuple): A tuple containing the start and end timestamps for filtering the data.
-        time_formats (dict): A dictionary containing the time unit and display formats for the chart.
-        chart_type (str): The type of chart (e.g., 'day' or 'hour').
-
-    Returns:
-        A rendered template with the chart data.
-    """
-    collection = database[collection_name]
-    data = collection.find({
+    subreddit_data = list(database[collection_name].find({
         'timestamp': {
             '$gte': int(time_range[0].timestamp()),
             '$lt': int(time_range[1].timestamp())
         }
-    }, {'_id': 0, 'timestamp': 1, 'subreddit': 1, 'sum_sentiment_score': 1}).sort('timestamp', 1)
+    }, {'_id': 0, 'timestamp': 1, 'subreddit': 1, 'sum_sentiment_score': 1}).sort('timestamp', 1))
 
     chart_data = {}
 
-    for item in data:
+    for item in subreddit_data:
         timestamp = item['timestamp']
         subreddit = item['subreddit']
         sum_sentiment_score = item['sum_sentiment_score']
@@ -53,6 +38,37 @@ def get_chart_data(collection_name, time_range, time_formats, chart_type):
             'timestamp': timestamp,
             'sum_sentiment_score': sum_sentiment_score
         })
+
+    if chart_type == 'day':
+        for name in ['nasdaq', 'bitcoin']:
+            finance_indexes_data = list(database['finance_indexes'].find({
+                'timestamp': {
+                    '$gte': int(time_range[0].timestamp()),
+                    '$lt': int(time_range[1].timestamp())
+                },
+                'name': name
+            }, {'_id': 0, 'timestamp': 1, 'name': 1, 'value': 1}).sort('timestamp', 1))
+
+            finance_indexes_values = [item.get('value') for item in finance_indexes_data if
+                                      item.get('value') is not None]
+            min_finance_indexes_value, max_finance_indexes_value = min(finance_indexes_values), max(
+                finance_indexes_values)
+
+            key = name + '_index'
+            if key not in chart_data:
+                chart_data[key] = []
+
+            for item in finance_indexes_data:
+                timestamp = item['timestamp']
+                value = item.get('value')
+
+                if value is not None:
+                    scaled_value = 10 * (value - min_finance_indexes_value) / (
+                                max_finance_indexes_value - min_finance_indexes_value)
+                    chart_data[key].append({
+                        'timestamp': timestamp,
+                        'sum_sentiment_score': scaled_value
+                    })
 
     default_subreddit = Config.get().default_subreddit()
 
@@ -85,7 +101,7 @@ def chart_day():
     time_formats = {
         'unit': 'day',
         'displayFormats': {
-            'day': 'YYYY-MM-DD'
+            'day': 'YYYY-MM-DD ddd'
         }
     }
 

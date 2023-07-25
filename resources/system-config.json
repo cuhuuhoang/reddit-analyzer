@@ -1,5 +1,5 @@
 {
-  "default_subreddit": ["bitcoin", "wallstreetbets"],
-  "display_day": 30,
+  "default_subreddit": ["nasdaq_index", "wallstreetbets"],
+  "display_day": 35,
   "display_hour": 24
 }

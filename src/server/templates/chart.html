@@ -29,15 +29,15 @@
                     </div>
                 </div>
                 <hr />
-                <span>NASDAQ Chart</span>
+                <button onclick="toggleVisibility('nasdaqChart')" class="btn btn-light text-dark btn-sm">Toggle NASDAQ Chart</button>
                 <br />
-                <div class="tradingview-widget-container">
+                <div id="nasdaqChart" class="tradingview-widget-container" style="display: none">
                   <div id="tradingview_eb146" style="height: 480px"></div>
+                  <hr />
                 </div>
-                <hr />
-                <span>BTC/USD Chart</span>
+                <button onclick="toggleVisibility('btcChart')" class="btn btn-light text-dark btn-sm">Toggle BTC Chart</button>
                 <br />
-                <div class="tradingview-widget-container">
+                <div id="btcChart" class="tradingview-widget-container" style="display: none">
                   <div id="tradingview_db611" style="height: 480px"></div>
                 </div>
             </div>
@@ -185,6 +185,15 @@
               "container_id": "tradingview_db611"
             }
           );
+
+        function toggleVisibility(id) {
+            var element = document.getElementById(id);
+            if (element.style.display === "none") {
+                element.style.display = "block";
+            } else {
+                element.style.display = "none";
+            }
+        }
     </script>
 </body>
 </html>
