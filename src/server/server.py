@@ -10,26 +10,29 @@ from src.core.system_config import Config
 
 app = Flask(__name__)
 
-
 # MongoDB connection
 connection = MongoConnection(MongoCredential.read_from_env())
 database = connection.database
 
 
-def get_chart_data(collection_name, time_range, time_formats, chart_type):
+def get_chart_data(collection_name, time_range, time_formats, chart_type, sma):
     subreddit_data = list(database[collection_name].find({
         'timestamp': {
             '$gte': int(time_range[0].timestamp()),
             '$lt': int(time_range[1].timestamp())
         }
-    }, {'_id': 0, 'timestamp': 1, 'subreddit': 1, 'sum_sentiment_score': 1, 'sum_sentiment_score_sma': 1}).sort('timestamp', 1))
+    }, {'_id': 0, 'timestamp': 1, 'subreddit': 1, 'sum_sentiment_score': 1, 'sum_sentiment_score_sma': 1}).sort(
+        'timestamp', 1))
 
     chart_data = {}
 
     for item in subreddit_data:
         timestamp = item['timestamp']
         subreddit = item['subreddit']
-        sum_sentiment_score = item.get('sum_sentiment_score_sma', 0)
+        if sma:
+            sum_sentiment_score = item.get('sum_sentiment_score_sma', 0)
+        else:
+            sum_sentiment_score = item.get('sum_sentiment_score', 0)
 
         if subreddit not in chart_data:
             chart_data[subreddit] = []
@@ -65,7 +68,7 @@ def get_chart_data(collection_name, time_range, time_formats, chart_type):
 
                 if value is not None:
                     scaled_value = 10 * (value - min_finance_indexes_value) / (
-                                max_finance_indexes_value - min_finance_indexes_value)
+                            max_finance_indexes_value - min_finance_indexes_value)
                     chart_data[key].append({
                         'timestamp': timestamp,
                         'sum_sentiment_score': scaled_value,
@@ -96,6 +99,7 @@ def chart_day():
     Returns:
         The rendered chart template for the 'day' chart.
     """
+    sma = int(request.args.get('sma', 1))
     display_day = Config.get().display_day()
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     last_month = today - timedelta(days=display_day)
@@ -107,7 +111,7 @@ def chart_day():
         }
     }
 
-    return get_chart_data('analyzed_by_created_days', (last_month, today), time_formats, 'day')
+    return get_chart_data('analyzed_by_created_days', (last_month, today), time_formats, 'day', sma == 1)
 
 
 @app.route('/chart/hour')
@@ -120,6 +124,7 @@ def chart_hour():
     Returns:
         The rendered chart template for the 'hour' chart.
     """
+    sma = int(request.args.get('sma', 0))
     display_hour = Config.get().display_hour()
     now = datetime.now()
     last_24_hours = now - timedelta(hours=display_hour)
@@ -132,7 +137,7 @@ def chart_hour():
         }
     }
 
-    return get_chart_data('analyzed_by_created_hours', (last_24_hours, current_hour), time_formats, 'hour')
+    return get_chart_data('analyzed_by_created_hours', (last_24_hours, current_hour), time_formats, 'hour', sma == 1)
 
 
 def timestamp_to_datetime(timestamp):
