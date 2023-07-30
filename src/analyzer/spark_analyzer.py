@@ -1,8 +1,8 @@
 import sys
 import time
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, floor, log, when
+from pyspark.sql import SparkSession, Window
+from pyspark.sql.functions import col, floor, log, when, avg, row_number, lag
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, BooleanType, DoubleType
 
 from src.core.mongo_connection import MongoConnection
@@ -113,12 +113,12 @@ class SparkAnalyzer:
         submission_scores_df = self.get_submission_scores_df()
         submission_sentiments_df = self.get_submission_sentiments_df()
 
-        # Calculate the timestamp for one month ago
-        one_month_ago = int(time.time()) - 30 * 24 * 3600
+        # Calculate the timestamp for last concerned timestamp
+        last_timestamp = int(time.time()) - 90 * 24 * 3600
 
         # Filter the DataFrame based on the created timestamp and selftext_length
         filtered_submissions_df = submissions_df \
-            .filter(submissions_df.created > one_month_ago) \
+            .filter(submissions_df.created > last_timestamp) \
             .filter(submissions_df.selftext_length > 100)
 
         # Join with submission_scores to get the last value of score
@@ -204,7 +204,13 @@ class SparkAnalyzer:
         result_df = floor_created_df.groupby("created_day", "subreddit").agg({"sentiment_composite": "sum"}) \
             .withColumnRenamed("sum(sentiment_composite)", "sum_sentiment_score")
 
-        # Write the result back to the MongoDB collection analyzed_by_created_days
+        # Create window by sorting the DataFrame by timestamp within each subreddit group
+        window_spec = Window.partitionBy("subreddit").orderBy("created_day")
+
+        # calculate the Simple Moving Average (SMA) based on the last few values within each subreddit group
+        result_df = result_df.withColumn("sum_sentiment_score_sma",
+                                         avg("sum_sentiment_score").over(window_spec.rowsBetween(-3, 0)))
+
         database = self.connection.database
         output_collection = database['analyzed_by_created_days']
         # Iterate over the result_df DataFrame and perform an upsert operation
@@ -212,11 +218,12 @@ class SparkAnalyzer:
             created_day = row["created_day"]
             subreddit = row["subreddit"]
             sum_sentiment_score = row["sum_sentiment_score"]
+            sum_sentiment_score_sma = row["sum_sentiment_score_sma"]
 
             # Perform an upsert operation
             output_collection.update_many(
                 {"timestamp": created_day, "subreddit": subreddit},
-                {"$set": {"sum_sentiment_score": sum_sentiment_score}},
+                {"$set": {"sum_sentiment_score": sum_sentiment_score, "sum_sentiment_score_sma": sum_sentiment_score_sma}},
                 upsert=True
             )
 

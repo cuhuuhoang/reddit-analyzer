@@ -22,14 +22,14 @@ def get_chart_data(collection_name, time_range, time_formats, chart_type):
             '$gte': int(time_range[0].timestamp()),
             '$lt': int(time_range[1].timestamp())
         }
-    }, {'_id': 0, 'timestamp': 1, 'subreddit': 1, 'sum_sentiment_score': 1}).sort('timestamp', 1))
+    }, {'_id': 0, 'timestamp': 1, 'subreddit': 1, 'sum_sentiment_score': 1, 'sum_sentiment_score_sma': 1}).sort('timestamp', 1))
 
     chart_data = {}
 
     for item in subreddit_data:
         timestamp = item['timestamp']
         subreddit = item['subreddit']
-        sum_sentiment_score = item['sum_sentiment_score']
+        sum_sentiment_score = item.get('sum_sentiment_score_sma', 0)
 
         if subreddit not in chart_data:
             chart_data[subreddit] = []

@@ -67,11 +67,22 @@
 
         // Prepare the datasets for the chart
         var datasets = [];
-        var colors = {}; // Mapping of subreddit to color
+
+        var colors = {
+            'bitcoin': '#D41872',
+            'stocks': '#6495ED',
+            'StockMarket': '#FF7F50',
+            'investing': '#00FFFF',
+            'cryptocurrency': '#7FFF00',
+            'ethereum': '#008B8B',
+            'altcoin': '#8A2BE2',
+            'wallstreetbets': '#5F9EA0',
+            'nasdaq_index': '#800000',
+            'bitcoin_index': '#191970'
+        };
 
         for (var subreddit in chartData) {
-            var color = getRandomColor(); // Generate a random color
-            colors[subreddit] = color;
+            var color = colors[subreddit];
 
             var isVisible = defaultSubreddits.includes(subreddit); // Check if the subreddit is in the default list
 
@@ -130,17 +141,6 @@
             }
         });
 
-
-        function getRandomColor() {
-            var letters = '0123456789ABCDEF';
-            var color = '#';
-
-            for (var i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-
-            return color;
-        }
 
         // Add click event listener to the chart canvas
         document.getElementById('myChart').onclick = function (evt) {
